@@ -1,0 +1,19 @@
+[
+  {
+    "modid": "${modid}",
+    "name": "${modid}",
+    "description": "${description}",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "https://github.com/${githuborg}/${modid}",
+    "updateUrl": "",
+    "authors": [
+      "Dries007",
+      "Doubledoor team"
+    ],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
