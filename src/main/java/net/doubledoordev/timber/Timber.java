@@ -30,14 +30,18 @@
 
 package net.doubledoordev.timber;
 
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.TickEvent;
 import net.doubledoordev.lib.DevPerks;
 import net.doubledoordev.timber.items.ItemLumberAxe;
 import net.doubledoordev.timber.util.Point;
+import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
@@ -46,6 +50,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.world.BlockEvent;
 import org.apache.logging.log4j.Logger;
+
+import java.util.Comparator;
 
 import static net.doubledoordev.timber.util.Constants.MODID;
 
@@ -59,19 +65,35 @@ public class Timber
     public static Timber instance;
 
     public Logger logger;
-    private HashMultimap<String, Point> pointMap = HashMultimap.create();
     public boolean debug = false;
+    public int limit = 1024;
+    public int mode = 0;
+    public boolean leaves = true;
+    public TreeMultimap<String, Point> pointMap = TreeMultimap.create(Ordering.natural(), new Comparator<Point>() {
+        @Override
+        public int compare(Point o1, Point o2)
+        {
+            return o2.distancesq - o1.distancesq;
+        }
+    });
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
         logger = event.getModLog();
         MinecraftForge.EVENT_BUS.register(this);
+        FMLCommonHandler.instance().bus().register(this);
 
         Configuration configuration = new Configuration(event.getSuggestedConfigurationFile());
 
+        limit = configuration.getInt("limit", MODID, limit, 1, 10000, "Hard limit of the amount that can be broken in one go. If you put this too high you might crash your server!! The maximum is dependant on your RAM settings.");
+        mode = configuration.getInt("mode", MODID, mode, 0, 1, "Valid modes:\n0: Only chop blocks with the same blockid\n1: Chop all wooden blocks");
+        leaves = configuration.getBoolean("leaves", MODID, leaves, "Harvest leaves too.");
+
         debug = configuration.getBoolean("debug", MODID, debug, "Enable extra debug output.");
         if (configuration.getBoolean("sillyness", MODID, true, "Disable sillyness only if you want to piss off the developers XD")) MinecraftForge.EVENT_BUS.register(new DevPerks(debug));
+
+        if (configuration.hasChanged()) configuration.save();
     }
 
     @Mod.EventHandler
@@ -81,35 +103,56 @@ public class Timber
     }
 
     @SubscribeEvent
+    public void tickEvent(TickEvent.PlayerTickEvent event)
+    {
+        if (event.phase != TickEvent.Phase.START) return;
+        if (!event.side.isServer()) return;
+        String name = event.player.getCommandSenderName();
+
+        
+    }
+
+    @SubscribeEvent
     public void breakEvent(BlockEvent.BreakEvent event)
     {
-        if (event.getPlayer() == null || event.block.getMaterial() != Material.wood) return;
+        if (event.getPlayer() == null) return;
+        if (!(event.block.getMaterial() == Material.wood || (leaves && event.block.getMaterial() == Material.leaves))) return;
+
         ItemStack itemStack = event.getPlayer().getHeldItem();
         if (itemStack == null || !(itemStack.getItem() instanceof ItemLumberAxe)) return;
 
         String name = event.getPlayer().getCommandSenderName();
         boolean first = !pointMap.containsKey(name);
-        pointMap.put(name, new Point(event.x, event.y, event.z));
+        pointMap.put(name, new Point(0, 0, 0, event.x, event.y, event.z));
 
         for (int offsetX = -1; offsetX <= 1; offsetX++)
         {
-            for (int offsetY = -1; offsetY <= 1; offsetY++)
+            for (int offsetZ = -1; offsetZ <= 1; offsetZ++)
             {
-                for (int offsetZ = -1; offsetZ <= 1; offsetZ++)
+                for (int offsetY = -1; offsetY <= 1; offsetY++)
                 {
                     int newX = event.x + offsetX;
                     int newY = event.y + offsetY;
                     int newZ = event.z + offsetZ;
 
-                    Point newPoint = new Point(newX, newY, newZ);
+                    Point newPoint = new Point(offsetX, offsetY, offsetZ, newX, newY, newZ);
                     if (pointMap.containsEntry(name, newPoint)) continue;
 
-                    pointMap.put(name, newPoint);
-
-                    if (event.world.getBlock(newX, newY, newZ) == event.block)
+                    Block newBlock = event.world.getBlock(newX, newY, newZ);
+                    switch (mode)
                     {
-                        ((EntityPlayerMP) event.getPlayer()).theItemInWorldManager.tryHarvestBlock(newX, newY, newZ);
+                        case 0:
+                            if (!(newBlock == event.block || (leaves && newBlock.getMaterial() == Material.leaves))) continue;
+                            break;
+
+                        case 1:
+                            if (!(newBlock.getMaterial() == Material.wood || (leaves && newBlock.getMaterial() == Material.leaves))) continue;
+                            break;
                     }
+
+                    pointMap.put(name, newPoint);
+                    if (pointMap.get(name).size() > limit) continue;
+                    ((EntityPlayerMP) event.getPlayer()).theItemInWorldManager.tryHarvestBlock(newX, newY, newZ);
                 }
             }
         }

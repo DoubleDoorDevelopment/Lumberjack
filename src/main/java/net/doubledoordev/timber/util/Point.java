@@ -35,10 +35,11 @@ package net.doubledoordev.timber.util;
  */
 public class Point
 {
-    final int x, y, z;
+    public final int x, y, z, distancesq;
 
-    public Point(int x, int y, int z)
+    public Point(int offsetX, int offsetY, int offsetZ, int x, int y, int z)
     {
+        distancesq = (offsetX * offsetX) + (offsetY * offsetY) + (offsetZ * offsetZ);
         this.x = x;
         this.y = y;
         this.z = z;
@@ -62,5 +63,11 @@ public class Point
         result = 31 * result + y;
         result = 31 * result + z;
         return result;
+    }
+
+    @Override
+    public String toString()
+    {
+        return String.format("{%d; %d; %d}", x, y, z);
     }
 }
