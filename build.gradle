@@ -33,9 +33,9 @@ version = "1.0.0"
 targetCompatibility = 1.7
 sourceCompatibility = 1.7
 
-archivesBaseName = 'Timber'
+archivesBaseName = 'Lumberjack'
 def githuborg = 'DoubleDoorDevelopment'
-def description = 'Cause I hate floating leaves.'
+def description = 'Boom. Tree gone!'
 minecraft {
     version = "1.7.10-10.13.0.1190"
     runDir = "jars"
