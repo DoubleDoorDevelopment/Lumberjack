@@ -1,7 +1,5 @@
-Timber
+Lumberjack
 ======
-
-More original name pending.
 
 Adds lumberaxes made from normal all tool materials. (May or may not work with modded materials, depends on how good the other modder's integration is.)
 
