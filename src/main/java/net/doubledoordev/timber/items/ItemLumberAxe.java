@@ -31,9 +31,13 @@
 package net.doubledoordev.timber.items;
 
 import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
+import net.minecraft.world.World;
 import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
@@ -57,6 +61,10 @@ public class ItemLumberAxe extends ItemAxe
         super(toolMaterial);
 
         String name = toolMaterial.name().toLowerCase();
+
+        //Fuck mods that do this: "modid_nameofmaterial"
+        if (name.indexOf('_') != -1) name = name.substring(name.indexOf('_') + 1);
+
         setTextureName(MODID + ":" + name + "_lumberaxe");
         name = "lumberaxe" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         setUnlocalizedName(name);
@@ -76,5 +84,11 @@ public class ItemLumberAxe extends ItemAxe
         {
             GameRegistry.addRecipe(new ShapedOreRecipe(this, "XX", "SX", "SX", 'S', "stickWood", 'X', OreDictionary.getOreName(id)).setMirrored(true));
         }
+    }
+
+    @Override
+    public boolean onBlockDestroyed(ItemStack itemStack, World world, Block block, int x, int y, int z, EntityLivingBase entityLivingBase)
+    {
+        return block.getMaterial() == Material.leaves || super.onBlockDestroyed(itemStack, world, block, x, y, z, entityLivingBase);
     }
 }

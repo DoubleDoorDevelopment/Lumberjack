@@ -30,8 +30,8 @@
 
 package net.doubledoordev.timber;
 
-import com.google.common.collect.Ordering;
-import com.google.common.collect.TreeMultimap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
@@ -51,8 +51,6 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.world.BlockEvent;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Comparator;
-
 import static net.doubledoordev.timber.util.Constants.MODID;
 
 /**
@@ -68,14 +66,9 @@ public class Timber
     public boolean debug = false;
     public int limit = 1024;
     public int mode = 0;
-    public boolean leaves = true;
-    public TreeMultimap<String, Point> pointMap = TreeMultimap.create(Ordering.natural(), new Comparator<Point>() {
-        @Override
-        public int compare(Point o1, Point o2)
-        {
-            return o2.distancesq - o1.distancesq;
-        }
-    });
+    public boolean leaves = false;
+    public HashMultimap<String, Point> pointMap = HashMultimap.create();
+    public HashMultimap<String, Point> nextMap  = HashMultimap.create();
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -107,9 +100,16 @@ public class Timber
     {
         if (event.phase != TickEvent.Phase.START) return;
         if (!event.side.isServer()) return;
-        String name = event.player.getCommandSenderName();
 
-        
+        String name = event.player.getCommandSenderName();
+        if (!nextMap.containsKey(name) || nextMap.get(name).isEmpty()) return;
+        for (Point point : ImmutableSet.copyOf(nextMap.get(name)))
+        {
+            ((EntityPlayerMP) event.player).theItemInWorldManager.tryHarvestBlock(point.x, point.y, point.z);
+            nextMap.remove(name, point);
+            if (pointMap.get(name).size() > limit) nextMap.removeAll(name);
+        }
+        if (!nextMap.containsKey(name) || !nextMap.get(name).isEmpty()) pointMap.removeAll(name);
     }
 
     @SubscribeEvent
@@ -122,8 +122,7 @@ public class Timber
         if (itemStack == null || !(itemStack.getItem() instanceof ItemLumberAxe)) return;
 
         String name = event.getPlayer().getCommandSenderName();
-        boolean first = !pointMap.containsKey(name);
-        pointMap.put(name, new Point(0, 0, 0, event.x, event.y, event.z));
+        pointMap.put(name, new Point(event.x, event.y, event.z));
 
         for (int offsetX = -1; offsetX <= 1; offsetX++)
         {
@@ -135,8 +134,8 @@ public class Timber
                     int newY = event.y + offsetY;
                     int newZ = event.z + offsetZ;
 
-                    Point newPoint = new Point(offsetX, offsetY, offsetZ, newX, newY, newZ);
-                    if (pointMap.containsEntry(name, newPoint)) continue;
+                    Point newPoint = new Point(newX, newY, newZ);
+                    if (nextMap.containsEntry(name, newPoint) || pointMap.containsEntry(name, newPoint)) continue;
 
                     Block newBlock = event.world.getBlock(newX, newY, newZ);
                     switch (mode)
@@ -150,13 +149,9 @@ public class Timber
                             break;
                     }
 
-                    pointMap.put(name, newPoint);
-                    if (pointMap.get(name).size() > limit) continue;
-                    ((EntityPlayerMP) event.getPlayer()).theItemInWorldManager.tryHarvestBlock(newX, newY, newZ);
+                    nextMap.put(name, newPoint);
                 }
             }
         }
-
-        if (first) pointMap.removeAll(name);
     }
 }

@@ -35,11 +35,10 @@ package net.doubledoordev.timber.util;
  */
 public class Point
 {
-    public final int x, y, z, distancesq;
+    public final int x, y, z;
 
-    public Point(int offsetX, int offsetY, int offsetZ, int x, int y, int z)
+    public Point(int x, int y, int z)
     {
-        distancesq = (offsetX * offsetX) + (offsetY * offsetY) + (offsetZ * offsetZ);
         this.x = x;
         this.y = y;
         this.z = z;
