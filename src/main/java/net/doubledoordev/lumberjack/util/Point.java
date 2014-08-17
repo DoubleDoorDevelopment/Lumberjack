@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.timber.util;
+package net.doubledoordev.lumberjack.util;
 
 /**
  * @author Dries007

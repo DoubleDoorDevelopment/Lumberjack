@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.timber;
+package net.doubledoordev.lumberjack;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -39,8 +39,8 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import net.doubledoordev.lib.DevPerks;
-import net.doubledoordev.timber.items.ItemLumberAxe;
-import net.doubledoordev.timber.util.Point;
+import net.doubledoordev.lumberjack.items.ItemLumberAxe;
+import net.doubledoordev.lumberjack.util.Point;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -51,22 +51,24 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.world.BlockEvent;
 import org.apache.logging.log4j.Logger;
 
-import static net.doubledoordev.timber.util.Constants.MODID;
+import java.util.HashSet;
+
+import static net.doubledoordev.lumberjack.util.Constants.*;
 
 /**
  * @author Dries007
  */
 @Mod(modid = MODID)
-public class Timber
+public class Lumberjack
 {
     @Mod.Instance(MODID)
-    public static Timber instance;
+    public static Lumberjack instance;
 
     public Logger logger;
-    public boolean debug = false;
-    public int limit = 1024;
-    public int mode = 0;
-    public boolean leaves = false;
+    public boolean                     debug    = false;
+    public int                         limit    = 1024;
+    public int                         mode     = 0;
+    public boolean                     leaves   = false;
     public HashMultimap<String, Point> pointMap = HashMultimap.create();
     public HashMultimap<String, Point> nextMap  = HashMultimap.create();
 
@@ -93,17 +95,25 @@ public class Timber
     public void init(FMLInitializationEvent event)
     {
         if (debug) logger.info("Registering all tools");
+        HashSet<Item> items = new HashSet<>(Item.ToolMaterial.values().length);
         for (Item.ToolMaterial material : Item.ToolMaterial.values())
         {
-            try
+            if (material.func_150995_f() == null && debug) logger.warn("The ToolMaterial " + material + " doesn't have a crafting item set. No LumberAxe from that!");
+            else if (items.contains(material.func_150995_f()) && debug) logger.warn("The ToolMaterial " + material + " uses an item that has already been used.");
+            else
             {
-                new ItemLumberAxe(material);
-            }
-            catch (Exception e)
-            {
-                // Noop
+                try
+                {
+                    new ItemLumberAxe(material);
+                    items.add(material.func_150995_f());
+                }
+                catch (Exception e)
+                {
+                    // Noop
+                }
             }
         }
+        if (debug) logger.info("Table of materials: \n" + makeTable(new TableData("Tool Material", ItemLumberAxe.toolMaterials), new TableData("Texture string", ItemLumberAxe.textureStrings), new TableData("Item name", ItemLumberAxe.itemNames), new TableData("Crafting Items", ItemLumberAxe.craftingItems)));
     }
 
     @SubscribeEvent

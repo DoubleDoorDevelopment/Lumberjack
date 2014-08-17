@@ -28,10 +28,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package net.doubledoordev.timber.items;
+package net.doubledoordev.lumberjack.items;
 
 import cpw.mods.fml.common.registry.GameRegistry;
-import net.doubledoordev.timber.Timber;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityLivingBase;
@@ -43,8 +42,9 @@ import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 
-import static net.doubledoordev.timber.util.Constants.MODID;
+import static net.doubledoordev.lumberjack.util.Constants.MODID;
 
 /**
  * @author Dries007
@@ -56,6 +56,11 @@ public class ItemLumberAxe extends ItemAxe
     {
         damageVsEntityField.setAccessible(true);
     }
+
+    public static ArrayList<String> toolMaterials   = new ArrayList<>();
+    public static ArrayList<String> textureStrings  = new ArrayList<>();
+    public static ArrayList<String> itemNames       = new ArrayList<>();
+    public static ArrayList<String> craftingItems   = new ArrayList<>();
 
     public ItemLumberAxe(ToolMaterial toolMaterial)
     {
@@ -72,7 +77,9 @@ public class ItemLumberAxe extends ItemAxe
         setUnlocalizedName(name);
         GameRegistry.registerItem(this, name);
 
-        if (Timber.instance.debug) Timber.instance.logger.info(String.format("ToolMaterial: %s \tTexture string: %s \tItem name: %s", toolMaterial, iconString, name));
+        toolMaterials.add(toolMaterial.toString());
+        textureStrings.add(iconString);
+        itemNames.add(name);
 
         try
         {
@@ -83,11 +90,23 @@ public class ItemLumberAxe extends ItemAxe
             e.printStackTrace();
         }
 
+        String items = "";
         ItemStack craftingItem = new ItemStack(toolMaterial.func_150995_f());
-        for (int id : OreDictionary.getOreIDs(craftingItem))
+        int[] ids = OreDictionary.getOreIDs(craftingItem);
+        if (ids.length == 0)
         {
-            GameRegistry.addRecipe(new ShapedOreRecipe(this, "XX", "SX", "SX", 'S', "stickWood", 'X', OreDictionary.getOreName(id)).setMirrored(true));
+            GameRegistry.addRecipe(new ShapedOreRecipe(this, "XX", "SX", "SX", 'S', "stickWood", 'X', craftingItem).setMirrored(true));
+            items = craftingItem.getUnlocalizedName();
         }
+        else
+        {
+            for (int id : ids)
+            {
+                GameRegistry.addRecipe(new ShapedOreRecipe(this, "XX", "SX", "SX", 'S', "stickWood", 'X', OreDictionary.getOreName(id)).setMirrored(true));
+                items += OreDictionary.getOreName(id) + ", ";
+            }
+        }
+        craftingItems.add(items);
     }
 
     @Override
