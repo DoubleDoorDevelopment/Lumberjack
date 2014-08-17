@@ -92,7 +92,17 @@ public class Timber
     @Mod.EventHandler
     public void init(FMLInitializationEvent event)
     {
-        for (Item.ToolMaterial material : Item.ToolMaterial.values()) new ItemLumberAxe(material);
+        for (Item.ToolMaterial material : Item.ToolMaterial.values())
+        {
+            try
+            {
+                new ItemLumberAxe(material);
+            }
+            catch (Exception e)
+            {
+                // Noop
+            }
+        }
     }
 
     @SubscribeEvent
