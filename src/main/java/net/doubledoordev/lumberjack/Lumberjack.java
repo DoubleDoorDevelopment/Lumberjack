@@ -98,8 +98,14 @@ public class Lumberjack
         HashSet<Item> items = new HashSet<>(Item.ToolMaterial.values().length);
         for (Item.ToolMaterial material : Item.ToolMaterial.values())
         {
-            if (material.func_150995_f() == null && debug) logger.warn("The ToolMaterial " + material + " doesn't have a crafting item set. No LumberAxe from that!");
-            else if (items.contains(material.func_150995_f()) && debug) logger.warn("The ToolMaterial " + material + " uses an item that has already been used.");
+            if (material.func_150995_f() == null)
+            {
+                if (debug) logger.warn("The ToolMaterial " + material + " doesn't have a crafting item set. No LumberAxe from that!");
+            }
+            else if (items.contains(material.func_150995_f()))
+            {
+                if (debug) logger.warn("The ToolMaterial " + material + " uses an item that has already been used.");
+            }
             else
             {
                 try
