@@ -92,6 +92,7 @@ public class Timber
     @Mod.EventHandler
     public void init(FMLInitializationEvent event)
     {
+        if (debug) logger.info("Registering all tools");
         for (Item.ToolMaterial material : Item.ToolMaterial.values())
         {
             try

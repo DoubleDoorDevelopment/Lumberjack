@@ -31,6 +31,7 @@
 package net.doubledoordev.timber.items;
 
 import cpw.mods.fml.common.registry.GameRegistry;
+import net.doubledoordev.timber.Timber;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityLivingBase;
@@ -70,6 +71,8 @@ public class ItemLumberAxe extends ItemAxe
         name = "lumberaxe" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         setUnlocalizedName(name);
         GameRegistry.registerItem(this, name);
+
+        if (Timber.instance.debug) Timber.instance.logger.info(String.format("ToolMaterial: %s \tTexture string: %s \tItem name: %s", toolMaterial, iconString, name));
 
         try
         {
