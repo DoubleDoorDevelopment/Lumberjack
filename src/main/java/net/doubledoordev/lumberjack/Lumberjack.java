@@ -63,8 +63,8 @@ public class Lumberjack
 {
     @Mod.Instance(MODID)
     public static Lumberjack instance;
-
     public Logger logger;
+
     public boolean                     debug    = false;
     public int                         limit    = 1024;
     public int                         mode     = 0;
