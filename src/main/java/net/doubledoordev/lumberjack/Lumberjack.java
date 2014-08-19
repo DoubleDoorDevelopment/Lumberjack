@@ -39,6 +39,7 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import net.doubledoordev.d3core.D3Core;
 import net.doubledoordev.d3core.util.ID3Mod;
 import net.doubledoordev.lumberjack.items.ItemLumberAxe;
 import net.doubledoordev.lumberjack.util.Point;
@@ -68,7 +69,6 @@ public class Lumberjack implements ID3Mod
     public static Lumberjack instance;
     public Logger logger;
 
-    public boolean                     debug    = false;
     public int                         limit    = 1024;
     public int                         mode     = 0;
     public boolean                     leaves   = false;
@@ -90,17 +90,17 @@ public class Lumberjack implements ID3Mod
     @Mod.EventHandler
     public void init(FMLInitializationEvent event)
     {
-        if (debug) logger.info("Registering all tools");
+        if (D3Core.debug()) logger.info("Registering all tools");
         HashSet<Item> items = new HashSet<>(Item.ToolMaterial.values().length);
         for (Item.ToolMaterial material : Item.ToolMaterial.values())
         {
             if (material.func_150995_f() == null)
             {
-                if (debug) logger.warn("The ToolMaterial " + material + " doesn't have a crafting item set. No LumberAxe from that!");
+                if (D3Core.debug()) logger.warn("The ToolMaterial " + material + " doesn't have a crafting item set. No LumberAxe from that!");
             }
             else if (items.contains(material.func_150995_f()))
             {
-                if (debug) logger.warn("The ToolMaterial " + material + " uses an item that has already been used.");
+                if (D3Core.debug()) logger.warn("The ToolMaterial " + material + " uses an item that has already been used.");
             }
             else
             {
@@ -115,7 +115,7 @@ public class Lumberjack implements ID3Mod
                 }
             }
         }
-        if (debug) logger.info("Table of materials: \n" + makeTable(new TableData("Tool Material", ItemLumberAxe.toolMaterials),
+        if (D3Core.debug()) logger.info("Table of materials: \n" + makeTable(new TableData("Tool Material", ItemLumberAxe.toolMaterials),
                 new TableData("Texture string", ItemLumberAxe.textureStrings),
                 new TableData("Item name", ItemLumberAxe.itemNames),
                 new TableData("Crafting Items", ItemLumberAxe.craftingItems)));
@@ -184,7 +184,7 @@ public class Lumberjack implements ID3Mod
     @Override
     public void syncConfig()
     {
-        configuration.setCategoryLanguageKey(MODID, "");
+        configuration.setCategoryLanguageKey(MODID, "d3.lumberjack.config.lumberjack");
         limit = configuration.getInt("limit", MODID, limit, 1, 10000, "Hard limit of the amount that can be broken in one go. If you put this too high you might crash your server!! The maximum is dependant on your RAM settings.");
         mode = configuration.getInt("mode", MODID, mode, 0, 1, "Valid modes:\n0: Only chop blocks with the same blockid\n1: Chop all wooden blocks");
         leaves = configuration.getBoolean("leaves", MODID, leaves, "Harvest leaves too.");
