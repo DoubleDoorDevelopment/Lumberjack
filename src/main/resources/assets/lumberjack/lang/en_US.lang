@@ -1,3 +1,6 @@
+d3.core.config.core=Lumberjack
+d3.core.config.core.tooltip=Settings for Lumberjack
+
 item.lumberaxeAdmin.name=Admin Lumberaxe
 item.lumberaxeAether.name=Aether Lumberaxe
 item.lumberaxeAluminium.name=Aluminium Lumberaxe

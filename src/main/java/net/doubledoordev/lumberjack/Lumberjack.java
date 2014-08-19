@@ -32,13 +32,14 @@ package net.doubledoordev.lumberjack;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
+import cpw.mods.fml.client.config.IConfigElement;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
-import net.doubledoordev.lib.DevPerks;
+import net.doubledoordev.d3core.util.ID3Mod;
 import net.doubledoordev.lumberjack.items.ItemLumberAxe;
 import net.doubledoordev.lumberjack.util.Point;
 import net.minecraft.block.Block;
@@ -47,11 +48,13 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.world.BlockEvent;
 import org.apache.logging.log4j.Logger;
 
 import java.util.HashSet;
+import java.util.List;
 
 import static net.doubledoordev.lumberjack.util.Constants.*;
 
@@ -59,7 +62,7 @@ import static net.doubledoordev.lumberjack.util.Constants.*;
  * @author Dries007
  */
 @Mod(modid = MODID)
-public class Lumberjack
+public class Lumberjack implements ID3Mod
 {
     @Mod.Instance(MODID)
     public static Lumberjack instance;
@@ -71,6 +74,7 @@ public class Lumberjack
     public boolean                     leaves   = false;
     public HashMultimap<String, Point> pointMap = HashMultimap.create();
     public HashMultimap<String, Point> nextMap  = HashMultimap.create();
+    private Configuration configuration;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -79,16 +83,8 @@ public class Lumberjack
         MinecraftForge.EVENT_BUS.register(this);
         FMLCommonHandler.instance().bus().register(this);
 
-        Configuration configuration = new Configuration(event.getSuggestedConfigurationFile());
-
-        limit = configuration.getInt("limit", MODID, limit, 1, 10000, "Hard limit of the amount that can be broken in one go. If you put this too high you might crash your server!! The maximum is dependant on your RAM settings.");
-        mode = configuration.getInt("mode", MODID, mode, 0, 1, "Valid modes:\n0: Only chop blocks with the same blockid\n1: Chop all wooden blocks");
-        leaves = configuration.getBoolean("leaves", MODID, leaves, "Harvest leaves too.");
-
-        debug = configuration.getBoolean("debug", MODID, debug, "Enable extra debug output.");
-        if (configuration.getBoolean("sillyness", MODID, true, "Disable sillyness only if you want to piss off the developers XD")) MinecraftForge.EVENT_BUS.register(new DevPerks(debug));
-
-        if (configuration.hasChanged()) configuration.save();
+        configuration = new Configuration(event.getSuggestedConfigurationFile());
+        syncConfig();
     }
 
     @Mod.EventHandler
@@ -119,7 +115,10 @@ public class Lumberjack
                 }
             }
         }
-        if (debug) logger.info("Table of materials: \n" + makeTable(new TableData("Tool Material", ItemLumberAxe.toolMaterials), new TableData("Texture string", ItemLumberAxe.textureStrings), new TableData("Item name", ItemLumberAxe.itemNames), new TableData("Crafting Items", ItemLumberAxe.craftingItems)));
+        if (debug) logger.info("Table of materials: \n" + makeTable(new TableData("Tool Material", ItemLumberAxe.toolMaterials),
+                new TableData("Texture string", ItemLumberAxe.textureStrings),
+                new TableData("Item name", ItemLumberAxe.itemNames),
+                new TableData("Crafting Items", ItemLumberAxe.craftingItems)));
     }
 
     @SubscribeEvent
@@ -180,5 +179,22 @@ public class Lumberjack
                 }
             }
         }
+    }
+
+    @Override
+    public void syncConfig()
+    {
+        configuration.setCategoryLanguageKey(MODID, "");
+        limit = configuration.getInt("limit", MODID, limit, 1, 10000, "Hard limit of the amount that can be broken in one go. If you put this too high you might crash your server!! The maximum is dependant on your RAM settings.");
+        mode = configuration.getInt("mode", MODID, mode, 0, 1, "Valid modes:\n0: Only chop blocks with the same blockid\n1: Chop all wooden blocks");
+        leaves = configuration.getBoolean("leaves", MODID, leaves, "Harvest leaves too.");
+
+        if (configuration.hasChanged()) configuration.save();
+    }
+
+    @Override
+    public void addConfigElements(List<IConfigElement> configElements)
+    {
+        configElements.add(new ConfigElement(configuration.getCategory(MODID.toLowerCase())));
     }
 }
