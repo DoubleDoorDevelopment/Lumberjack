@@ -94,31 +94,42 @@ public class Lumberjack implements ID3Mod
         HashSet<Item> items = new HashSet<>(Item.ToolMaterial.values().length);
         for (Item.ToolMaterial material : Item.ToolMaterial.values())
         {
-            if (material.func_150995_f() == null)
+            try
             {
-                if (D3Core.debug()) logger.warn("The ToolMaterial " + material + " doesn't have a crafting item set. No LumberAxe from that!");
-            }
-            else if (items.contains(material.func_150995_f()))
-            {
-                if (D3Core.debug()) logger.warn("The ToolMaterial " + material + " uses an item that has already been used.");
-            }
-            else
-            {
-                try
+                if (material.func_150995_f() == null)
                 {
-                    new ItemLumberAxe(material);
-                    items.add(material.func_150995_f());
+                    if (D3Core.debug()) logger.warn("The ToolMaterial " + material + " doesn't have a crafting item set. No LumberAxe from that!");
                 }
-                catch (Exception e)
+                else if (items.contains(material.func_150995_f()))
                 {
-                    // Noop
+                    if (D3Core.debug()) logger.warn("The ToolMaterial " + material + " uses an item that has already been used.");
                 }
+                else
+                {
+                    try
+                    {
+                        new ItemLumberAxe(material);
+                        items.add(material.func_150995_f());
+                    }
+                    catch (Exception e)
+                    {
+                        // Noop
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                logger.error("Some ToolMaterial has a corrupt state: " + material);
             }
         }
-        if (D3Core.debug()) logger.info("Table of materials: \n" + makeTable(new TableData("Tool Material", ItemLumberAxe.toolMaterials),
-                new TableData("Texture string", ItemLumberAxe.textureStrings),
-                new TableData("Item name", ItemLumberAxe.itemNames),
-                new TableData("Crafting Items", ItemLumberAxe.craftingItems)));
+        if (D3Core.debug())
+        {
+            logger.info("Table of materials");
+            logger.info(makeTable(new TableData("Tool Material", ItemLumberAxe.toolMaterials),
+                    new TableData("Texture string", ItemLumberAxe.textureStrings),
+                    new TableData("Item name", ItemLumberAxe.itemNames),
+                    new TableData("Crafting Items", ItemLumberAxe.craftingItems)));
+        }
     }
 
     @SubscribeEvent
