@@ -69,9 +69,10 @@ public class ItemLumberAxe extends ItemAxe
         String name = toolMaterial.name().toLowerCase();
         if (toolMaterial == ToolMaterial.EMERALD) name = "diamond";
 
-        //Fuck mods that do this: "modid_nameofmaterial" or "materialname.name"
+        //Fuck mods that do this: "modid_nameofmaterial"
         if (name.indexOf('_') != -1) name = name.substring(name.indexOf('_') + 1);
-        if (name.endsWith(".name")) name = name.substring(0, name.lastIndexOf('.'));
+        if (name.indexOf('|') != -1) name = name.substring(name.indexOf('|') + 1);
+        if (name.indexOf(':') != -1) name = name.substring(name.indexOf(':') + 1);
 
         setTextureName(MODID + ":" + name + "_lumberaxe");
         name = "lumberaxe" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
