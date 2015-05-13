@@ -62,7 +62,7 @@ import static net.doubledoordev.lumberjack.util.Constants.*;
 /**
  * @author Dries007
  */
-@Mod(modid = MODID)
+@Mod(modid = MODID, dependencies = "after:D3Core")
 public class Lumberjack implements ID3Mod
 {
     @Mod.Instance(MODID)

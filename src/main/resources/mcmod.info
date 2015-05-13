@@ -1,5 +1,6 @@
-[
-  {
+{
+  "modListVersion": 2,
+  "modList": [{
     "modid": "${modid}",
     "name": "${modid}",
     "description": "${description}",
@@ -7,13 +8,14 @@
     "mcversion": "${mcversion}",
     "url": "https://github.com/${githuborg}/${modid}",
     "updateUrl": "",
-    "authors": [
-      "Dries007",
-      "Doubledoor team"
-    ],
+    "authorList": [ "Dries007", "Doubledoor team" ],
     "credits": "",
     "logoFile": "",
     "screenshots": [],
-    "dependencies": []
-  }
-]
+    "parent": "D3Core",
+    "requiredMods": [ "Forge", "D3Core" ],
+    "dependencies": [ "D3Core" ],
+    "dependants": [ ],
+    "useDependencyInformation": true
+  }]
+}
