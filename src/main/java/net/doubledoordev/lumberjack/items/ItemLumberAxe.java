@@ -30,13 +30,14 @@
 
 package net.doubledoordev.lumberjack.items;
 
-import cpw.mods.fml.common.registry.GameRegistry;
-import net.minecraft.block.Block;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
@@ -44,6 +45,7 @@ import net.minecraftforge.oredict.ShapedOreRecipe;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 
+import net.doubledoordev.lumberjack.Lumberjack;
 import static net.doubledoordev.lumberjack.util.Constants.MODID;
 
 /**
@@ -67,21 +69,21 @@ public class ItemLumberAxe extends ItemAxe
         super(toolMaterial);
 
         String name = toolMaterial.name().toLowerCase();
-        if (toolMaterial == ToolMaterial.EMERALD) name = "diamond";
+        if (toolMaterial == ToolMaterial.DIAMOND) name = "diamond";
 
         //Fuck mods that do this: "modid_nameofmaterial"
         if (name.indexOf('_') != -1) name = name.substring(name.indexOf('_') + 1);
         if (name.indexOf('|') != -1) name = name.substring(name.indexOf('|') + 1);
         if (name.indexOf(':') != -1) name = name.substring(name.indexOf(':') + 1);
 
-        setTextureName(MODID + ":" + name + "_lumberaxe");
         name = "lumberaxe" + Character.toUpperCase(name.charAt(0)) + name.substring(1);
         setUnlocalizedName(name);
-        GameRegistry.registerItem(this, name);
+
 
         toolMaterials.add(toolMaterial.toString());
-        textureStrings.add(iconString);
         itemNames.add(name);
+
+        GameRegistry.registerItem(this,name);
 
         try
         {
@@ -93,7 +95,7 @@ public class ItemLumberAxe extends ItemAxe
         }
 
         String items = "";
-        ItemStack craftingItem = new ItemStack(toolMaterial.func_150995_f());
+        ItemStack craftingItem = toolMaterial.getRepairItemStack().copy();
         int[] ids = OreDictionary.getOreIDs(craftingItem);
         if (ids.length == 0)
         {
@@ -112,8 +114,8 @@ public class ItemLumberAxe extends ItemAxe
     }
 
     @Override
-    public boolean onBlockDestroyed(ItemStack itemStack, World world, Block block, int x, int y, int z, EntityLivingBase entityLivingBase)
+    public boolean onBlockDestroyed(ItemStack itemStack, World world, IBlockState state, BlockPos blockPos, EntityLivingBase entityLivingBase)
     {
-        return block.getMaterial() == Material.leaves || super.onBlockDestroyed(itemStack, world, block, x, y, z, entityLivingBase);
+        return state.getBlock().getMaterial(state).equals(Material.LEAVES) || super.onBlockDestroyed(itemStack, world, state, blockPos, entityLivingBase);
     }
 }
