@@ -45,9 +45,6 @@ import net.minecraftforge.oredict.ShapedOreRecipe;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 
-import net.doubledoordev.lumberjack.Lumberjack;
-import static net.doubledoordev.lumberjack.util.Constants.MODID;
-
 /**
  * @author Dries007
  */
