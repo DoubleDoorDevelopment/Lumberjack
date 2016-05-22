@@ -45,7 +45,7 @@ import net.doubledoordev.d3core.util.ID3Mod;
 import net.doubledoordev.lumberjack.Proxy.IProxy;
 import net.doubledoordev.lumberjack.items.ItemLumberAxe;
 import net.doubledoordev.lumberjack.util.Point;
-
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -187,14 +187,15 @@ public class Lumberjack implements ID3Mod
                     if (nextMap.containsEntry(name, newPoint) || pointMap.containsEntry(name, newPoint)) continue;
 
                     Block newBlock = event.getWorld().getBlockState(new BlockPos(newX,newY,newZ)).getBlock();
+                    IBlockState newBlockState = event.getWorld().getBlockState(new BlockPos(newX, newY, newZ));
                     switch (mode)
                     {
                         case 0:
-                            if (!(newBlock.equals(event.getState().getBlock()) || (leaves && newBlock.getMaterial(event.getState()).equals(Material.LEAVES)))) continue;
+                            if (!(newBlockState == event.getState() || (leaves && newBlockState.getMaterial() == Material.LEAVES))) continue;
                             break;
 
                         case 1:
-                            if (!(newBlock.getMaterial(event.getState()).equals(Material.WOOD) || (leaves && newBlock.getMaterial(event.getState()).equals(Material.LEAVES)))) continue;
+                            if (!(newBlockState.getMaterial() == Material.WOOD || (leaves && newBlockState.getMaterial() == Material.LEAVES)))
                             break;
                     }
 
