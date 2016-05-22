@@ -186,12 +186,12 @@ public class Lumberjack implements ID3Mod
                     Point newPoint = new Point(newX, newY, newZ);
                     if (nextMap.containsEntry(name, newPoint) || pointMap.containsEntry(name, newPoint)) continue;
 
-                    Block newBlock = event.getWorld().getBlockState(new BlockPos(newX,newY,newZ)).getBlock();
                     IBlockState newBlockState = event.getWorld().getBlockState(new BlockPos(newX, newY, newZ));
                     switch (mode)
                     {
                         case 0:
-                            if (!(newBlockState == event.getState() || (leaves && newBlockState.getMaterial() == Material.LEAVES))) continue;
+
+                            if (!(newBlockState.getBlock() == event.getState().getBlock() || (leaves && newBlockState.getMaterial() == Material.LEAVES))) continue;
                             break;
 
                         case 1:
