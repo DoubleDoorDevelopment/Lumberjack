@@ -32,28 +32,35 @@ package net.doubledoordev.lumberjack;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
-import cpw.mods.fml.client.config.IConfigElement;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import cpw.mods.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.client.config.IConfigElement;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.doubledoordev.d3core.D3Core;
 import net.doubledoordev.d3core.util.ID3Mod;
+import net.doubledoordev.lumberjack.Proxy.IProxy;
 import net.doubledoordev.lumberjack.items.ItemLumberAxe;
 import net.doubledoordev.lumberjack.util.Point;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
+
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.world.BlockEvent;
+
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -67,6 +74,9 @@ public class Lumberjack implements ID3Mod
 {
     @Mod.Instance(MODID)
     public static Lumberjack instance;
+
+    @SidedProxy(clientSide = "net.doubledoordev.lumberjack.Proxy.ClientProxy", serverSide = "net.doubledoordev.lumberjack.Proxy.CommonProxy")
+    public static IProxy proxy;
     public Logger logger;
 
     public int                         limit    = 1024;
@@ -75,6 +85,7 @@ public class Lumberjack implements ID3Mod
     public HashMultimap<String, Point> pointMap = HashMultimap.create();
     public HashMultimap<String, Point> nextMap  = HashMultimap.create();
     private Configuration configuration;
+    private static ArrayList<ItemLumberAxe> lumberAxes = new ArrayList<>();
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -91,25 +102,25 @@ public class Lumberjack implements ID3Mod
     public void init(FMLInitializationEvent event)
     {
         if (D3Core.debug()) logger.info("Registering all tools");
-        HashSet<Item> items = new HashSet<>(Item.ToolMaterial.values().length);
+        HashSet<ItemStack> itemStack = new HashSet<>(Item.ToolMaterial.values().length);
         for (Item.ToolMaterial material : Item.ToolMaterial.values())
         {
             try
             {
-                if (material.func_150995_f() == null)
+                if (material.getRepairItemStack() == null)
                 {
-                    if (D3Core.debug()) logger.warn("The ToolMaterial " + material + " doesn't have a crafting item set. No LumberAxe from that!");
+                    if (D3Core.debug()) logger.warn("The ToolMaterial " + material + " doesn't have a crafting itemstack set. No LumberAxe from that!");
                 }
-                else if (items.contains(material.func_150995_f()))
+                else if (itemStack.contains(material.getRepairItemStack()))
                 {
-                    if (D3Core.debug()) logger.warn("The ToolMaterial " + material + " uses an item that has already been used.");
+                    if (D3Core.debug()) logger.warn("The ToolMaterial " + material + " uses an itemStack that has already been used.");
                 }
                 else
                 {
                     try
                     {
-                        new ItemLumberAxe(material);
-                        items.add(material.func_150995_f());
+                        lumberAxes.add(new ItemLumberAxe(material));
+                        itemStack.add(material.getRepairItemStack());
                     }
                     catch (Exception e)
                     {
@@ -130,6 +141,8 @@ public class Lumberjack implements ID3Mod
                     new TableData("Item name", ItemLumberAxe.itemNames),
                     new TableData("Crafting Items", ItemLumberAxe.craftingItems)));
         }
+
+        proxy.registerItemRenders(event);
     }
 
     @SubscribeEvent
@@ -138,11 +151,11 @@ public class Lumberjack implements ID3Mod
         if (event.phase != TickEvent.Phase.START) return;
         if (!event.side.isServer()) return;
 
-        String name = event.player.getCommandSenderName();
+        String name = event.player.getCommandSenderEntity().getName();
         if (!nextMap.containsKey(name) || nextMap.get(name).isEmpty()) return;
         for (Point point : ImmutableSet.copyOf(nextMap.get(name)))
         {
-            ((EntityPlayerMP) event.player).theItemInWorldManager.tryHarvestBlock(point.x, point.y, point.z);
+            ((EntityPlayerMP) event.player).interactionManager.tryHarvestBlock(new BlockPos(point.x, point.y, point.z));
             nextMap.remove(name, point);
             if (pointMap.get(name).size() > limit) nextMap.removeAll(name);
         }
@@ -153,13 +166,12 @@ public class Lumberjack implements ID3Mod
     public void breakEvent(BlockEvent.BreakEvent event)
     {
         if (event.getPlayer() == null) return;
-        if (!(event.block.getMaterial() == Material.wood || (leaves && event.block.getMaterial() == Material.leaves))) return;
-
-        ItemStack itemStack = event.getPlayer().getHeldItem();
+        if (!(event.getState().getMaterial() == Material.WOOD || (leaves && event.getState().getMaterial() == Material.LEAVES))) return;
+        ItemStack itemStack = event.getPlayer().getHeldItemMainhand();
         if (itemStack == null || !(itemStack.getItem() instanceof ItemLumberAxe)) return;
 
-        String name = event.getPlayer().getCommandSenderName();
-        pointMap.put(name, new Point(event.x, event.y, event.z));
+        String name = event.getPlayer().getCommandSenderEntity().getName();
+        pointMap.put(name, new Point(event.getPos().getX(), event.getPos().getY(), event.getPos().getZ()));
 
         for (int offsetX = -1; offsetX <= 1; offsetX++)
         {
@@ -167,22 +179,23 @@ public class Lumberjack implements ID3Mod
             {
                 for (int offsetY = -1; offsetY <= 1; offsetY++)
                 {
-                    int newX = event.x + offsetX;
-                    int newY = event.y + offsetY;
-                    int newZ = event.z + offsetZ;
+                    int newX = event.getPos().getX() + offsetX;
+                    int newY = event.getPos().getY() + offsetY;
+                    int newZ = event.getPos().getZ() + offsetZ;
 
                     Point newPoint = new Point(newX, newY, newZ);
                     if (nextMap.containsEntry(name, newPoint) || pointMap.containsEntry(name, newPoint)) continue;
 
-                    Block newBlock = event.world.getBlock(newX, newY, newZ);
+                    IBlockState newBlockState = event.getWorld().getBlockState(new BlockPos(newX, newY, newZ));
                     switch (mode)
                     {
                         case 0:
-                            if (!(newBlock == event.block || (leaves && newBlock.getMaterial() == Material.leaves))) continue;
+
+                            if (!(newBlockState.getBlock() == event.getState().getBlock() || (leaves && newBlockState.getMaterial() == Material.LEAVES))) continue;
                             break;
 
                         case 1:
-                            if (!(newBlock.getMaterial() == Material.wood || (leaves && newBlock.getMaterial() == Material.leaves))) continue;
+                            if (!(newBlockState.getMaterial() == Material.WOOD || (leaves && newBlockState.getMaterial() == Material.LEAVES)))
                             break;
                     }
 
@@ -207,5 +220,10 @@ public class Lumberjack implements ID3Mod
     public void addConfigElements(List<IConfigElement> configElements)
     {
         configElements.add(new ConfigElement(configuration.getCategory(MODID.toLowerCase())));
+    }
+
+    public static ArrayList<ItemLumberAxe> getLumberAxes()
+    {
+        return lumberAxes;
     }
 }
