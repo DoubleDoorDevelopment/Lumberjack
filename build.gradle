@@ -26,6 +26,7 @@ configurations {
 
 apply plugin: "net.minecraftforge.gradle.forge"
 apply plugin: "idea-utils"
+apply plugin: "maven"
 
 group = "net.doubledoordev.lumberjack"
 version = "1.2.0"
@@ -146,7 +147,7 @@ uploadArchives {
                     project {
                         name project.archivesBaseName
                         packaging 'jar'
-                        description = description
+                        description = project.description
                         url 'https://github.com/' + githuborg + '/' + project.archivesBaseName
 
                         scm {
@@ -162,7 +163,7 @@ uploadArchives {
 
                         licenses  {
                             license  {
-                                name 'MIT License'
+                                name 'New BSD License'
                                 url 'https://raw.github.com/' + githuborg + '/' + project.archivesBaseName + '/master/LICENCE.txt'
                                 distribution 'repo'
                             }
@@ -177,7 +178,7 @@ uploadArchives {
                             developer {
                                 id 'Claycorp'
                                 name 'Claycorp'
-                                roles { role 'architect' }
+                                roles { role 'developer' }
                             }
                         }
                     }
