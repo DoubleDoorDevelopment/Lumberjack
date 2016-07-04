@@ -1,1 +1,1 @@
-{"parent": "builtin/generated","textures": {"layer0": "lumberjack:items/admin_lumberaxe"}}
+{"parent": "item/handheld","textures": {"layer0": "lumberjack:items/admin_lumberaxe"}}
