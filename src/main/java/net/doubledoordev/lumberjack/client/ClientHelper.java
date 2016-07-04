@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, DoubleDoorDevelopment
+ * Copyright (c) 2014-2016, Dries007 & DoubleDoorDevelopment
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,7 +12,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  *
- *  Neither the name of the project nor the names of its
+ *  Neither the name of DoubleDoorDevelopment nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
  *
@@ -26,35 +26,24 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
-package net.doubledoordev.lumberjack.Proxy;
+package net.doubledoordev.lumberjack.client;
 
+import net.doubledoordev.lumberjack.items.ItemLumberAxe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-
-import net.doubledoordev.lumberjack.Lumberjack;
-import net.doubledoordev.lumberjack.items.ItemLumberAxe;
-
-public class ClientProxy extends CommonProxy{
-
-	@Override
-	public void registerItemRenders(FMLInitializationEvent event) {
-
-		String axeName;
-		RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
-		ModelResourceLocation lumberaxeMRL;
-		for(ItemLumberAxe axe: Lumberjack.getLumberAxes())
-		{
-			axeName = axe.getUnlocalizedName().substring(14);
-			lumberaxeMRL = new ModelResourceLocation("lumberjack:lumberaxe"+axeName,"inventory");
-			renderItem.getItemModelMesher().register(axe,0,lumberaxeMRL);
-		}
-
-
-
-	}
+public class ClientHelper
+{
+    public static void init()
+    {
+        final RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
+        for (ItemLumberAxe axe: ItemLumberAxe.lumberAxes)
+        {
+            renderItem.getItemModelMesher().register(axe, 0, new ModelResourceLocation(axe.getRegistryName(), "inventory"));
+        }
+    }
 }

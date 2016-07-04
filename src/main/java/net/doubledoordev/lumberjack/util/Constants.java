@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, DoubleDoorDevelopment
+ * Copyright (c) 2014-2016, Dries007 & DoubleDoorDevelopment
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,7 +12,7 @@
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
  *
- *  Neither the name of the project nor the names of its
+ *  Neither the name of DoubleDoorDevelopment nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
  *
@@ -26,11 +26,14 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
  */
 
 package net.doubledoordev.lumberjack.util;
 
-import java.util.ArrayList;
+import net.doubledoordev.d3core.util.CoreConstants;
+
+import java.util.List;
 
 /**
  * @author Dries007
@@ -38,14 +41,20 @@ import java.util.ArrayList;
 public class Constants
 {
     public static final String MODID = "Lumberjack";
+    public static final String UPDATE_URL = CoreConstants.BASE_URL + MODID + ".json";
+
+    /**
+     * @see net.doubledoordev.d3core.client.ModConfigGuiFactory
+     */
+    public static final String MOD_GUI_FACTORY = "net.doubledoordev.lumberjack.client.ModConfigGuiFactory";
 
     public static final class TableData
     {
-        public  String            header;
-        public  ArrayList<String> strings;
-        private int               width;
+        public String header;
+        public List<String> strings;
+        private int width;
 
-        public TableData(String header, ArrayList<String> data)
+        public TableData(String header, List<String> data)
         {
             this.header = header;
             this.strings = data;
@@ -66,14 +75,17 @@ public class Constants
         for (TableData data : datas) size += data.width * data.strings.size();
         StringBuilder stringBuilder = new StringBuilder(size);
 
-        for (TableData data : datas) stringBuilder.append('|').append(' ').append(data.header).append(new String(new char[data.width - data.header.length() + 1]).replace('\0', ' '));
+        for (TableData data : datas)
+            stringBuilder.append('|').append(' ').append(data.header).append(new String(new char[data.width - data.header.length() + 1]).replace('\0', ' '));
         stringBuilder.append('|').append('\n');
-        for (TableData data : datas) stringBuilder.append('+').append(new String(new char[data.width + 2]).replace('\0', '-'));
+        for (TableData data : datas)
+            stringBuilder.append('+').append(new String(new char[data.width + 2]).replace('\0', '-'));
         stringBuilder.append('+').append('\n');
         int i = 0;
         while (i < datas[0].strings.size())
         {
-            for (TableData data : datas) stringBuilder.append('|').append(' ').append(data.strings.get(i)).append(new String(new char[data.width - data.strings.get(i).length() + 1]).replace('\0', ' '));
+            for (TableData data : datas)
+                stringBuilder.append('|').append(' ').append(data.strings.get(i)).append(new String(new char[data.width - data.strings.get(i).length() + 1]).replace('\0', ' '));
             stringBuilder.append('|').append('\n');
             i++;
         }
