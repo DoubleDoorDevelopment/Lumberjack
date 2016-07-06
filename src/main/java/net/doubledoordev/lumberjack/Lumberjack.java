@@ -88,16 +88,15 @@ public class Lumberjack
         if (D3Core.isDebug()) logger.info("Registering all tools");
         for (Item.ToolMaterial material : Item.ToolMaterial.values())
         {
-            ItemStack repairStack = ItemStack.copyItemStack(material.getRepairItemStack());
-            //noinspection ConstantConditions
-            if (repairStack == null)
-            {
-                if (D3Core.isDebug()) logger.warn("The ToolMaterial " + material + " doesn't have a repair/crafting item set. No LumberAxe from that! You can use the materials.json file from D3Core to add an item yourself, or ask the mod author.");
-                continue;
-            }
-
             try
             {
+                ItemStack repairStack = ItemStack.copyItemStack(material.getRepairItemStack());
+                //noinspection ConstantConditions
+                if (repairStack == null)
+                {
+                    if (D3Core.isDebug()) logger.warn("The ToolMaterial " + material + " doesn't have a repair/crafting item set. No LumberAxe from that! You can use the materials.json file from D3Core to add an item yourself, or ask the mod author.");
+                    continue;
+                }
                 new ItemLumberAxe(material, repairStack);
             }
             catch (Exception e)

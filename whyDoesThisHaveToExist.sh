@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 function json
 {
     f=$(basename "$1")
