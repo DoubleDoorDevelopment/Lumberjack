@@ -31,26 +31,22 @@
 
 package net.doubledoordev.lumberjack;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableSet;
-import net.doubledoordev.d3core.D3Core;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import net.doubledoordev.lumberjack.client.ClientHelper;
 import net.doubledoordev.lumberjack.items.ItemLumberAxe;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.doubledoordev.lumberjack.util.EventHandler;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.item.ItemAxe;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.apache.logging.log4j.Logger;
+
+import java.util.HashSet;
+import java.util.regex.Pattern;
 
 import static net.doubledoordev.lumberjack.util.Constants.*;
 
@@ -67,94 +63,105 @@ public class Lumberjack
     private int limit = 1024;
     private int mode = 0;
     private boolean leaves = false;
-    private HashMultimap<String, BlockPos> pointMap = HashMultimap.create();
-    private HashMultimap<String, BlockPos> nextMap = HashMultimap.create();
+    private boolean useAllMaterials = true;
+    
     private Configuration configuration;
+    private String[] banList;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
         logger = event.getModLog();
 
-        MinecraftForge.EVENT_BUS.register(this);
-
         configuration = new Configuration(event.getSuggestedConfigurationFile());
         syncConfig();
+
+        MinecraftForge.EVENT_BUS.register(EventHandler.I);
     }
 
+    /**
+     * While it's in general not good to register items in init instead of preInit, I feel here it is appropriate.
+     * This avoids a more complex mod sorting order
+     */
     @Mod.EventHandler
     public void init(FMLInitializationEvent event)
     {
-        if (D3Core.isDebug()) logger.info("Registering all tools");
-        for (Item.ToolMaterial material : Item.ToolMaterial.values())
+        HashSet<Item.ToolMaterial> unusedMaterials = Sets.newHashSet(Item.ToolMaterial.values());
+        // First (since it's the way we can get more accurate damage/speed values) we find all axes
+        for (Item i : ImmutableList.copyOf(Item.REGISTRY))
         {
+            if (!(i instanceof ItemAxe)) continue;
             try
             {
-                ItemStack repairStack = ItemStack.copyItemStack(material.getRepairItemStack());
-                //noinspection ConstantConditions
-                if (repairStack == null)
+                ItemAxe axe = ((ItemAxe) i);
+                Item.ToolMaterial m = axe.getToolMaterial();
+                if (m == null || m.name() == null)
                 {
-                    if (D3Core.isDebug()) logger.warn("The ToolMaterial " + material + " doesn't have a repair/crafting item set. No LumberAxe from that! You can use the materials.json file from D3Core to add an item yourself, or ask the mod author.");
+                    logger.error("Found horribly broken axe {} with material {}. Please report.", i.getRegistryName(), m);
                     continue;
                 }
-                new ItemLumberAxe(material, repairStack);
+                logger.info("Found an axe {} with material {} ({})", i.getRegistryName(), m, ItemLumberAxe.normalizeName(m));
+
+                if (!unusedMaterials.remove(m) || ItemLumberAxe.usedMaterial(m))
+                {
+                    logger.info("Material {} already in use.", m);
+                    continue;
+                }
+
+                if (isBlacklisted(m.name())) continue;
+
+                new ItemLumberAxe(m, axe);
             }
             catch (Exception e)
             {
-                logger.warn("Something went wrong registering a lumberaxe. This is not a crash, the lumberaxe for material '" + material + "' will not exist.", e);
+                logger.error("Something went wrong registering a lumberaxe. This is not a crash, the lumberaxe for axe '" + i.getRegistryName() + "' will not exist. Please report.", e);
             }
         }
-        if (D3Core.isDebug()) ItemLumberAxe.debug();
-        if (event.getSide().isClient()) ClientHelper.init();
-    }
 
-    @SubscribeEvent
-    public void tickEvent(TickEvent.PlayerTickEvent event)
-    {
-        if (event.phase != TickEvent.Phase.START) return;
-        if (!event.side.isServer()) return;
-
-        String name = event.player.getName();
-        if (!nextMap.containsKey(name) || nextMap.get(name).isEmpty()) return;
-        for (BlockPos point : ImmutableSet.copyOf(nextMap.get(name)))
+        // Now we do all other toolmaterials, if allowed by user settings
+        if (useAllMaterials)
         {
-            ((EntityPlayerMP) event.player).interactionManager.tryHarvestBlock(point);
-            nextMap.remove(name, point);
-            if (pointMap.get(name).size() > limit) nextMap.removeAll(name);
-        }
-        if (!nextMap.containsKey(name) || !nextMap.get(name).isEmpty()) pointMap.removeAll(name);
-    }
-
-    @SubscribeEvent
-    public void breakEvent(BlockEvent.BreakEvent event)
-    {
-        if (event.getPlayer() == null) return;
-        if (!(event.getState().getMaterial() == Material.WOOD || (leaves && event.getState().getMaterial() == Material.LEAVES))) return;
-
-        ItemStack itemStack = event.getPlayer().getHeldItemMainhand();
-        if (itemStack == null || !(itemStack.getItem() instanceof ItemLumberAxe)) return;
-
-        String name = event.getPlayer().getName();
-        pointMap.put(name, event.getPos());
-
-        for (int offsetX = -1; offsetX <= 1; offsetX++)
-        {
-            for (int offsetZ = -1; offsetZ <= 1; offsetZ++)
+            for (Item.ToolMaterial m : unusedMaterials)
             {
-                for (int offsetY = -1; offsetY <= 1; offsetY++)
+                try
                 {
-                    BlockPos newPoint = event.getPos().add(offsetX, offsetY, offsetZ);
-                    if (nextMap.containsEntry(name, newPoint) || pointMap.containsEntry(name, newPoint)) continue;
+                    if (m == null || m.name() == null)
+                    {
+                        logger.error("Found horribly broken material {}. Please report.", m);
+                        continue;
+                    }
+                    logger.info("Found an unused material {} ({})", m, ItemLumberAxe.normalizeName(m));
 
-                    IBlockState newBlockState = event.getWorld().getBlockState(newPoint);
-                    boolean isLeaves = leaves && newBlockState.getMaterial() == Material.LEAVES;
+                    if (ItemLumberAxe.usedMaterial(m))
+                    {
+                        logger.info("Material {} already in use, probably under a (differently) prefixed name.", m);
+                        continue;
+                    }
 
-                    if ((mode == 0 && (isLeaves || newBlockState.getBlock() == event.getState().getBlock()))
-                            || mode == 1 && (isLeaves || newBlockState.getMaterial() == Material.WOOD))
-                        nextMap.put(name, newPoint);
+                    if (isBlacklisted(m.name())) continue;
+
+                    new ItemLumberAxe(m);
+                }
+                catch (Exception e)
+                {
+                    logger.warn("Something went wrong registering a lumberaxe. This is not a crash, the lumberaxe for ToolMaterial '" + m + "' will not exist.", e);
                 }
             }
         }
+        if (event.getSide().isClient()) ClientHelper.init();
+    }
+
+    public static boolean isBlacklisted(String name)
+    {
+        for (String ban : instance.banList)
+        {
+            if (ban.equalsIgnoreCase(name))
+            {
+                instance.logger.info("Material {} is blacklisted. It matches {} literally.", name, ban);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void syncConfig()
@@ -163,6 +170,12 @@ public class Lumberjack
         limit = configuration.getInt("limit", MODID, limit, 1, 10000, "Hard limit of the amount that can be broken in one go. If you put this too high you might crash your server!! The maximum is dependant on your RAM settings.");
         mode = configuration.getInt("mode", MODID, mode, 0, 1, "Valid modes:\n0: Only chop blocks with the same blockid\n1: Chop all wooden blocks");
         leaves = configuration.getBoolean("leaves", MODID, leaves, "Harvest leaves too.");
+        useAllMaterials = configuration.getBoolean("useAllMaterials", MODID, useAllMaterials, "If you set this to false, we will only clone other axes, and not try to use all ToolMaterials.");
+        banList = configuration.get("banlist", MODID, new String[0],
+                "A list of names you don't want to see as lumberaxes.\n" +
+                        "Not case sensitive, but it uses the RAW ToolMaterial name. AKA it does not strip modid's or oter 'unique making techniques' mod authors may use to prevent conflicts with materials from other mods.\n" +
+                        "Use * as a wildcard at the beginning or end to match with endsWith or startsWith respectively.\n" +
+                        "Example: 'BASEMETALS_*' will prevent any material that starts with 'BASEMETALS_' from becoming a lumberaxe.", Pattern.compile("^\\*[A-z0-9_:|]+$|^[A-z0-9_:|]+\\*$|^[A-z0-9_:|]+$")).getStringList();
 
         if (configuration.hasChanged()) configuration.save();
     }
@@ -175,5 +188,20 @@ public class Lumberjack
     public static Logger getLogger()
     {
         return instance.logger;
+    }
+
+    public static int getLimit()
+    {
+        return instance.limit;
+    }
+
+    public static boolean getLeaves()
+    {
+        return instance.leaves;
+    }
+
+    public static int getMode()
+    {
+        return instance.mode;
     }
 }

@@ -31,96 +31,136 @@
 
 package net.doubledoordev.lumberjack.items;
 
-import com.google.common.collect.Multimap;
 import net.doubledoordev.lumberjack.Lumberjack;
-import net.doubledoordev.lumberjack.util.Constants;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemTool;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
+import javax.annotation.Nullable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-
-import static net.doubledoordev.lumberjack.util.Constants.makeTable;
 
 /**
  * @author Dries007
  */
 public class ItemLumberAxe extends ItemAxe
 {
-    public static final UUID ATTRIBUTE_MODIFIER_DAMAGE = UUID.fromString("ee56eb2e-71df-43df-b956-e06e4c587599");
-    public static final UUID ATTRIBUTE_MODIFIER_SPEED = UUID.fromString("fca3c43b-40f9-4037-b269-56f726268b7c");
+    private static Field efficiencyOnProperMaterialField = ItemTool.class.getDeclaredFields()[1];
+    private static Field damageVsEntityField = ItemTool.class.getDeclaredFields()[2];
+    private static Field attackSpeedField = ItemTool.class.getDeclaredFields()[3];
+    static
+    {
+        efficiencyOnProperMaterialField.setAccessible(true);
+        damageVsEntityField.setAccessible(true);
+        attackSpeedField.setAccessible(true);
+    }
 
     public static List<ItemLumberAxe> lumberAxes = new ArrayList<>();
     private static List<String> toolMaterials = new ArrayList<>();
-    private static List<String> textureStrings = new ArrayList<>();
-    private static List<String> itemNames = new ArrayList<>();
-    private static List<String> craftingItems = new ArrayList<>();
+
+    public final boolean fromAxe;
+
+    public static boolean usedMaterial(ToolMaterial m)
+    {
+        return toolMaterials.contains(normalizeName(m));
+    }
+
+    @Nullable
+    public static ItemStack getRepairStack(ToolMaterial m)
+    {
+        try
+        {
+            return m.getRepairItemStack();
+        }
+        catch (ArrayIndexOutOfBoundsException e)
+        {
+            Lumberjack.getLogger().error("ArrayIndexOutOfBoundsException when registering a lumberaxe. This is a known issue, currently being investigated. {}", m);
+        }
+        return null;
+    }
+
+    /**
+     * Because we do not want 7 bronze axes
+     */
+    public static String normalizeName(ToolMaterial toolMaterial)
+    {
+        String name = toolMaterial.name().toLowerCase().replaceAll("tools?|materials?|(battle)?(sword|axe|hoe|pick(axe)?|shovel|hammer)", "").replaceAll("[_|: ]", " ").trim();
+        if (name.indexOf(' ') != -1) name = name.substring(name.indexOf(' ') + 1);
+        return name;
+    }
+
     public final String materialName;
 
-    public ItemLumberAxe(ToolMaterial toolMaterial, ItemStack repairStack)
+    public ItemLumberAxe(ToolMaterial m, ItemAxe axe) throws IllegalAccessException
     {
-        super(toolMaterial);
+        this(m, true);
+        setProperty(efficiencyOnProperMaterialField, axe);
+        setProperty(damageVsEntityField, axe);
+        setProperty(attackSpeedField, axe);
+    }
 
-        String name = toolMaterial.name().toLowerCase();
+    public ItemLumberAxe(ToolMaterial m)
+    {
+        this(m, false);
+    }
 
-        //Fuck mods that do this: "modid_nameofmaterial"
-        if (name.indexOf('_') != -1) name = name.substring(name.indexOf('_') + 1);
-        if (name.indexOf('|') != -1) name = name.substring(name.indexOf('|') + 1);
-        if (name.indexOf(':') != -1) name = name.substring(name.indexOf(':') + 1);
+    /**
+     * The extra constructor is required to force the possibility of a null itemstack, so the null check doesn't get optimized out.
+     * Required since MCP added the package-info stuff with @MethodsReturnNonnullByDefault
+     */
+    private ItemLumberAxe(ToolMaterial toolMaterial, boolean fromAxe)
+    {
+        super(toolMaterial, 1F + 4F + (0.5F + 2F) * toolMaterial.getDamageVsEntity(), -0.1F -3.5F + 0.05F * toolMaterial.getEfficiencyOnProperMaterial());
+        this.fromAxe = fromAxe;
+        materialName = normalizeName(toolMaterial);
 
-        this.materialName = name;
+        setUnlocalizedName("lumberaxe" + Character.toUpperCase(materialName.charAt(0)) + materialName.substring(1));
 
-        setUnlocalizedName("lumberaxe" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
+        toolMaterials.add(materialName);
 
-        toolMaterials.add(toolMaterial.toString());
-        itemNames.add(name);
-
-        this.setRegistryName("lumberjack", materialName + "_lumberaxe");
-        GameRegistry.register(this);
-
-        String items = "";
-        int[] ids = OreDictionary.getOreIDs(repairStack);
-        if (ids.length == 0)
+        ItemStack repairStack = getRepairStack(toolMaterial);
+        if (repairStack != null && repairStack.getItem() != null)
         {
-            GameRegistry.addRecipe(new ShapedOreRecipe(this, "XX", "SX", "SX", 'S', "stickWood", 'X', repairStack).setMirrored(true));
-            items = repairStack.getUnlocalizedName();
-        }
-        else
-        {
-            for (int id : ids)
+            int[] ids = OreDictionary.getOreIDs(repairStack);
+            if (ids.length == 0)
             {
-                GameRegistry.addRecipe(new ShapedOreRecipe(this, "XX", "SX", "SX", 'S', "stickWood", 'X', OreDictionary.getOreName(id)).setMirrored(true));
-                items += OreDictionary.getOreName(id) + ", ";
+                GameRegistry.addRecipe(new ShapedOreRecipe(this, "XX", "SX", "SX", 'S', "stickWood", 'X', repairStack).setMirrored(true));
+            }
+            else
+            {
+                for (int id : ids)
+                {
+                    GameRegistry.addRecipe(new ShapedOreRecipe(this, "XX", "SX", "SX", 'S', "stickWood", 'X', OreDictionary.getOreName(id)).setMirrored(true));
+                }
             }
         }
-        craftingItems.add(items);
+        else Lumberjack.getLogger().info("lumberaxe without recipe: {} Ask the mod author of whatever mod registers it to please provide a repairStack with the ToolMaterial OR use D3Core's materials.json file to set it yourself.", toolMaterial);
+
+        setRegistryName("lumberjack", materialName + "_lumberaxe");
+        GameRegistry.register(this);
+
         lumberAxes.add(this);
     }
 
-    @Override
-    public Multimap<String, AttributeModifier> getAttributeModifiers(EntityEquipmentSlot slot, ItemStack stack)
+    private void setProperty(Field field, ItemAxe axe)
     {
-        Multimap<String, AttributeModifier> multimap = super.getAttributeModifiers(slot, stack);
-
-        if (slot == EntityEquipmentSlot.MAINHAND)
+        try
         {
-            multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getAttributeUnlocalizedName(), new AttributeModifier(ATTRIBUTE_MODIFIER_DAMAGE, "Weapon modifier", 0.75, 1));
-            multimap.put(SharedMonsterAttributes.ATTACK_SPEED.getAttributeUnlocalizedName(), new AttributeModifier(ATTRIBUTE_MODIFIER_SPEED, "Weapon modifier", -0.75, 1));
+            field.set(this, field.get(axe));
         }
-
-        return multimap;
+        catch (Exception e)
+        {
+            Lumberjack.getLogger().error("Something went wrong trying to hack in the right damage/speed values of the " + this.toolMaterial + " axe.", e);
+        }
     }
 
     @SuppressWarnings("NullableProblems")
@@ -128,16 +168,5 @@ public class ItemLumberAxe extends ItemAxe
     public boolean onBlockDestroyed(ItemStack itemStack, World world, IBlockState state, BlockPos blockPos, EntityLivingBase entityLivingBase)
     {
         return Material.LEAVES.equals(state.getMaterial()) || super.onBlockDestroyed(itemStack, world, state, blockPos, entityLivingBase);
-    }
-
-    public static void debug()
-    {
-        Lumberjack.getLogger().info("Table of materials");
-        Lumberjack.getLogger().info(makeTable(
-                new Constants.TableData("Tool Material", ItemLumberAxe.toolMaterials),
-                new Constants.TableData("Texture string", ItemLumberAxe.textureStrings),
-                new Constants.TableData("Item name", ItemLumberAxe.itemNames),
-                new Constants.TableData("Crafting Items", ItemLumberAxe.craftingItems)
-        ));
     }
 }
