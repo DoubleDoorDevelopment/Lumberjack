@@ -100,11 +100,10 @@ public class Lumberjack
                     logger.error("Found horribly broken axe {} with material {}. Please report.", i.getRegistryName(), m);
                     continue;
                 }
-                logger.info("Found an axe {} with material {} ({})", i.getRegistryName(), m, ItemLumberAxe.normalizeName(m));
 
                 if (!unusedMaterials.remove(m) || ItemLumberAxe.usedMaterial(m))
                 {
-                    logger.info("Material {} already in use.", m);
+                    logger.debug("Material {} ({}) already in use.", m, ItemLumberAxe.normalizeName(m));
                     continue;
                 }
 
@@ -114,7 +113,7 @@ public class Lumberjack
             }
             catch (Exception e)
             {
-                logger.error("Something went wrong registering a lumberaxe. This is not a crash, the lumberaxe for axe '" + i.getRegistryName() + "' will not exist. Please report.", e);
+                logger.warn("New Lumberaxe error. Axe trying to imitate: " + i.getRegistryName(), e);
             }
         }
 
@@ -130,11 +129,10 @@ public class Lumberjack
                         logger.error("Found horribly broken material {}. Please report.", m);
                         continue;
                     }
-                    logger.info("Found an unused material {} ({})", m, ItemLumberAxe.normalizeName(m));
 
                     if (ItemLumberAxe.usedMaterial(m))
                     {
-                        logger.info("Material {} already in use, probably under a (differently) prefixed name.", m);
+                        logger.debug("Material {} ({}) already in use.", m, ItemLumberAxe.normalizeName(m));
                         continue;
                     }
 
@@ -144,7 +142,7 @@ public class Lumberjack
                 }
                 catch (Exception e)
                 {
-                    logger.warn("Something went wrong registering a lumberaxe. This is not a crash, the lumberaxe for ToolMaterial '" + m + "' will not exist.", e);
+                    logger.warn("New Lumberaxe error. ToolMaterial '" + m + "' will not exist.", e);
                 }
             }
         }

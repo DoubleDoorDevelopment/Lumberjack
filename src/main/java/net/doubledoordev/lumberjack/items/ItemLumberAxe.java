@@ -93,7 +93,7 @@ public class ItemLumberAxe extends ItemAxe
      */
     public static String normalizeName(ToolMaterial toolMaterial)
     {
-        String name = toolMaterial.name().toLowerCase().replaceAll("tools?|materials?|(battle)?(sword|axe|hoe|pick(axe)?|shovel|hammer)", "").replaceAll("[_|: ]", " ").trim();
+        String name = toolMaterial.name().toLowerCase().replaceAll("tools?|materials?|(battle)?(sword|axe|hoe|pick(axe)?|shovel|hammer)", "").replaceAll("[_|:]+", " ").trim();
         if (name.indexOf(' ') != -1) name = name.substring(name.indexOf(' ') + 1);
         return name;
     }
@@ -103,6 +103,7 @@ public class ItemLumberAxe extends ItemAxe
     public ItemLumberAxe(ToolMaterial m, ItemAxe axe) throws IllegalAccessException
     {
         this(m, true);
+        Lumberjack.getLogger().info("New LumberAxe {} ({}) From axe {}", toolMaterial, materialName, axe.getRegistryName());
         setProperty(efficiencyOnProperMaterialField, axe);
         setProperty(damageVsEntityField, axe);
         setProperty(attackSpeedField, axe);
@@ -111,6 +112,7 @@ public class ItemLumberAxe extends ItemAxe
     public ItemLumberAxe(ToolMaterial m)
     {
         this(m, false);
+        Lumberjack.getLogger().info("New LumberAxe {} ({}) From Material", toolMaterial, materialName);
     }
 
     /**
