@@ -31,6 +31,7 @@
 
 package net.doubledoordev.lumberjack;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import net.doubledoordev.lumberjack.client.ClientHelper;
@@ -40,14 +41,17 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemAxe;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.apache.logging.log4j.Logger;
 
 import java.util.HashSet;
 import java.util.regex.Pattern;
 
+import static net.doubledoordev.d3core.util.CoreConstants.MODID;
 import static net.doubledoordev.lumberjack.util.Constants.*;
 
 /**
@@ -60,10 +64,11 @@ public class Lumberjack
     public static Lumberjack instance;
 
     private Logger logger;
-    private int limit = 1024;
+    private int totalLimit = 1024;
+    private int tickLimit = 32;
     private int mode = 0;
     private boolean leaves = false;
-    private boolean useAllMaterials = true;
+    private boolean useAllMaterials = false;
     
     private Configuration configuration;
     private String[] banList;
@@ -73,10 +78,11 @@ public class Lumberjack
     {
         logger = event.getModLog();
 
-        configuration = new Configuration(event.getSuggestedConfigurationFile());
-        syncConfig();
-
+        MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(EventHandler.I);
+
+        configuration = new Configuration(event.getSuggestedConfigurationFile());
+        updateConfig();
     }
 
     /**
@@ -146,11 +152,25 @@ public class Lumberjack
                 }
             }
         }
+
         if (event.getSide().isClient()) ClientHelper.init();
     }
 
+    @SubscribeEvent
+    public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event)
+    {
+        if (event.getModID().equals(MODID)) updateConfig();
+    }
+
+    /**+
+     * Does blacklist matching based on rules explained in the coding comment.
+     * Also prints out the entry that got hit, to aid in debugging faulty configs.
+     */
     public static boolean isBlacklisted(String name)
     {
+        // Let's avoid that unpleasantly before it even happens. Cannot print though, since we don't have info.
+        if (Strings.isNullOrEmpty(name)) return true;
+
         for (String ban : instance.banList)
         {
             if (ban.equalsIgnoreCase(name))
@@ -158,14 +178,26 @@ public class Lumberjack
                 instance.logger.info("Material {} is blacklisted. It matches {} literally.", name, ban);
                 return true;
             }
+            if (ban.charAt(0) == '*' && name.endsWith(ban.substring(1)))
+            {
+                instance.logger.info("Material {} is blacklisted. It matches {} as a suffix.", name, ban);
+                return true;
+            }
+            if (ban.charAt(ban.length() - 1) == '*' && name.startsWith(ban.substring(0, ban.length() - 2)))
+            {
+                instance.logger.info("Material {} is blacklisted. It matches {} as a suffix.", name, ban);
+                return true;
+            }
         }
+
         return false;
     }
 
-    private void syncConfig()
+    private void updateConfig()
     {
         configuration.setCategoryLanguageKey(MODID, "d3.lumberjack.config.lumberjack");
-        limit = configuration.getInt("limit", MODID, limit, 1, 10000, "Hard limit of the amount that can be broken in one go. If you put this too high you might crash your server!! The maximum is dependant on your RAM settings.");
+        totalLimit = configuration.getInt("totalLimit", MODID, totalLimit, 1, 10000, "Hard limit of the amount that can be broken in one go.");
+        tickLimit = configuration.getInt("tickLimit", MODID, tickLimit, 1, 10000, "Hard limit of the amount that can be broken in one go.");
         mode = configuration.getInt("mode", MODID, mode, 0, 1, "Valid modes:\n0: Only chop blocks with the same blockid\n1: Chop all wooden blocks");
         leaves = configuration.getBoolean("leaves", MODID, leaves, "Harvest leaves too.");
         useAllMaterials = configuration.getBoolean("useAllMaterials", MODID, useAllMaterials, "If you set this to false, we will only clone other axes, and not try to use all ToolMaterials.");
@@ -188,9 +220,14 @@ public class Lumberjack
         return instance.logger;
     }
 
-    public static int getLimit()
+    public static int getTotalLimit()
     {
-        return instance.limit;
+        return instance.totalLimit;
+    }
+
+    public static int getTickLimit()
+    {
+        return instance.tickLimit;
     }
 
     public static boolean getLeaves()

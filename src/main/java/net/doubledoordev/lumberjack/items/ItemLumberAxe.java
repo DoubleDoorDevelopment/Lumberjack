@@ -31,6 +31,7 @@
 
 package net.doubledoordev.lumberjack.items;
 
+import com.google.common.collect.ImmutableList;
 import net.doubledoordev.lumberjack.Lumberjack;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -64,16 +65,32 @@ public class ItemLumberAxe extends ItemAxe
         attackSpeedField.setAccessible(true);
     }
 
-    public static List<ItemLumberAxe> lumberAxes = new ArrayList<>();
+    private static List<ItemLumberAxe> lumberAxes = new ArrayList<>();
     private static List<String> toolMaterials = new ArrayList<>();
 
-    public final boolean fromAxe;
+    public static List<ItemLumberAxe> getLumberAxes()
+    {
+        return ImmutableList.copyOf(lumberAxes);
+    }
+
+    /**
+     * @return List of NORMALIZED toolmaterials that SHOULD have a lumberaxe item.
+     *  Sometimes, when an error occurs while registering, this will not be the case, thus don't assume!
+     */
+    public static List<String> getUsedToolMaterials()
+    {
+        return ImmutableList.copyOf(toolMaterials);
+    }
 
     public static boolean usedMaterial(ToolMaterial m)
     {
         return toolMaterials.contains(normalizeName(m));
     }
 
+    /**
+     * Wtf? I think this may be forge's fault...
+     * Basically, the Enum is fucked up, so the call will fail when the fallback to getRepairItem() happens.
+     */
     @Nullable
     public static ItemStack getRepairStack(ToolMaterial m)
     {
@@ -95,10 +112,11 @@ public class ItemLumberAxe extends ItemAxe
     {
         String name = toolMaterial.name().toLowerCase().replaceAll("tools?|materials?|(battle)?(sword|axe|hoe|pick(axe)?|shovel|hammer)", "").replaceAll("[_|:]+", " ").trim();
         if (name.indexOf(' ') != -1) name = name.substring(name.indexOf(' ') + 1);
-        return name;
+        return name.replaceAll(" ", "");
     }
 
     public final String materialName;
+    public final boolean fromAxe;
 
     public ItemLumberAxe(ToolMaterial m, ItemAxe axe) throws IllegalAccessException
     {
@@ -145,7 +163,7 @@ public class ItemLumberAxe extends ItemAxe
                 }
             }
         }
-        else Lumberjack.getLogger().info("lumberaxe without recipe: {} Ask the mod author of whatever mod registers it to please provide a repairStack with the ToolMaterial OR use D3Core's materials.json file to set it yourself.", toolMaterial);
+        else Lumberjack.getLogger().info("LumberAxe {} without recipe! Ask the mod author of {} for a ToolMaterial repairStack OR use D3Core's materials.json file to set it yourself.", materialName, toolMaterial);
 
         setRegistryName("lumberjack", materialName + "_lumberaxe");
         GameRegistry.register(this);
@@ -165,10 +183,10 @@ public class ItemLumberAxe extends ItemAxe
         }
     }
 
-    @SuppressWarnings("NullableProblems")
     @Override
-    public boolean onBlockDestroyed(ItemStack itemStack, World world, IBlockState state, BlockPos blockPos, EntityLivingBase entityLivingBase)
+    public boolean onBlockDestroyed(@Nullable ItemStack itemStack, @Nullable World world, IBlockState state, @Nullable BlockPos blockPos, @Nullable EntityLivingBase entityLivingBase)
     {
-        return Material.LEAVES.equals(state.getMaterial()) || super.onBlockDestroyed(itemStack, world, state, blockPos, entityLivingBase);
+        return itemStack != null && world != null && blockPos != null && entityLivingBase != null &&
+                (Material.LEAVES.equals(state.getMaterial()) || super.onBlockDestroyed(itemStack, world, state, blockPos, entityLivingBase));
     }
 }

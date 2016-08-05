@@ -44,7 +44,7 @@ public class Constants
     public static final String UPDATE_URL = CoreConstants.BASE_URL + MODID + ".json";
 
     /**
-     * @see net.doubledoordev.d3core.client.ModConfigGuiFactory
+     * @see net.doubledoordev.lumberjack.client.ModConfigGuiFactory
      */
     public static final String MOD_GUI_FACTORY = "net.doubledoordev.lumberjack.client.ModConfigGuiFactory";
 

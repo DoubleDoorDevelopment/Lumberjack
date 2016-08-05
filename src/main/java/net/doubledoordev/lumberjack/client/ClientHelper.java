@@ -41,7 +41,7 @@ public class ClientHelper
     public static void init()
     {
         final RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
-        for (ItemLumberAxe axe: ItemLumberAxe.lumberAxes)
+        for (ItemLumberAxe axe: ItemLumberAxe.getLumberAxes())
         {
             renderItem.getItemModelMesher().register(axe, 0, new ModelResourceLocation(axe.getRegistryName(), "inventory"));
         }

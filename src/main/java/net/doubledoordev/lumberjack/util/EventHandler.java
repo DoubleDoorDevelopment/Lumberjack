@@ -37,6 +37,7 @@ import net.doubledoordev.lumberjack.Lumberjack;
 import net.doubledoordev.lumberjack.items.ItemLumberAxe;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
@@ -44,8 +45,10 @@ import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
+import java.util.UUID;
+
 /**
- * This mod relies on the fact it calls
+ * This event handler relies on the interaction of both events.
  */
 public class EventHandler
 {
@@ -55,38 +58,59 @@ public class EventHandler
     {
     }
 
-    private HashMultimap<String, BlockPos> pointMap = HashMultimap.create();
-    private HashMultimap<String, BlockPos> nextMap = HashMultimap.create();
+    // Keeps track of the chopped blocks across multiple ticks, until there is no more left. Then gets cleared.
+    private HashMultimap<UUID, BlockPos> pointMap = HashMultimap.create();
+    // Keeps track of what blocks to chop next tick.
+    private HashMultimap<UUID, BlockPos> nextMap = HashMultimap.create();
 
+    /*
+     * To avoid the server lagging to death for large tries.
+     */
     @SubscribeEvent
     public void tickEvent(TickEvent.PlayerTickEvent event)
     {
         if (event.phase != TickEvent.Phase.START) return;
         if (!event.side.isServer()) return;
 
-        String name = event.player.getName();
-        if (!nextMap.containsKey(name) || nextMap.get(name).isEmpty()) return;
-        for (BlockPos point : ImmutableSet.copyOf(nextMap.get(name)))
+        final UUID uuid = event.player.getUniqueID();
+
+        // If there are no blocks to chop, return
+        if (!nextMap.containsKey(uuid) || nextMap.get(uuid).isEmpty()) return;
+
+        // Immutable and not an iterator because breakEvent can modify this list!
+        int i = 0;
+        for (BlockPos point : ImmutableSet.copyOf(nextMap.get(uuid)))
         {
+            // This indirectly causes breakEvent to be invoked
             ((EntityPlayerMP) event.player).interactionManager.tryHarvestBlock(point);
-            nextMap.remove(name, point);
-            if (pointMap.get(name).size() > Lumberjack.getLimit()) nextMap.removeAll(name);
+            // Remove the current point
+            nextMap.remove(uuid, point);
+            if (i ++ > Lumberjack.getTickLimit()) break;
         }
-        if (!nextMap.containsKey(name) || !nextMap.get(name).isEmpty()) pointMap.removeAll(name);
+        // If more blocks then the total limit have been chopped, clear out the next list, thereby breaking the chain
+        if (pointMap.get(uuid).size() > Lumberjack.getTotalLimit()) nextMap.removeAll(uuid);
+        // If the next map does not reference this player anymore, we can get rid of the old data
+        if (!nextMap.containsKey(uuid) || !nextMap.get(uuid).isEmpty()) pointMap.removeAll(uuid);
     }
 
     @SubscribeEvent
     public void breakEvent(BlockEvent.BreakEvent event)
     {
-        if (event.getPlayer() == null) return;
-        if (!(event.getState().getMaterial() == Material.WOOD || (Lumberjack.getLeaves() && event.getState().getMaterial() == Material.LEAVES))) return;
+        final EntityPlayer player = event.getPlayer();
+        if (player == null) return;
+        final UUID uuid = player.getUniqueID();
+        final IBlockState state = event.getState();
+        // Only interact if wood or leaves
+        if (!(state.getMaterial() == Material.WOOD || (Lumberjack.getLeaves() && state.getMaterial() == Material.LEAVES))) return;
 
-        ItemStack itemStack = event.getPlayer().getHeldItemMainhand();
+        // Only interact if  the item matches
+        ItemStack itemStack = player.getHeldItemMainhand();
         if (itemStack == null || !(itemStack.getItem() instanceof ItemLumberAxe)) return;
 
-        String name = event.getPlayer().getName();
-        pointMap.put(name, event.getPos());
+        // We are chopping the current block, so save that info
+        pointMap.put(uuid, event.getPos());
 
+        // For each block in a 3x3x3 cube around this one
         for (int offsetX = -1; offsetX <= 1; offsetX++)
         {
             for (int offsetZ = -1; offsetZ <= 1; offsetZ++)
@@ -94,14 +118,17 @@ public class EventHandler
                 for (int offsetY = -1; offsetY <= 1; offsetY++)
                 {
                     BlockPos newPoint = event.getPos().add(offsetX, offsetY, offsetZ);
-                    if (nextMap.containsEntry(name, newPoint) || pointMap.containsEntry(name, newPoint)) continue;
+                    // Avoid doing the same block more then once
+                    if (nextMap.containsEntry(uuid, newPoint) || pointMap.containsEntry(uuid, newPoint)) continue;
 
                     IBlockState newBlockState = event.getWorld().getBlockState(newPoint);
                     boolean isLeaves = Lumberjack.getLeaves() && newBlockState.getMaterial() == Material.LEAVES;
 
-                    if ((Lumberjack.getMode() == 0 && (isLeaves || newBlockState.getBlock() == event.getState().getBlock()))
+                    // Mode 0: leaves or same blocktype
+                    // Mode 1: leaves or all wood
+                    if ((Lumberjack.getMode() == 0 && (isLeaves || newBlockState.getBlock() == state.getBlock()))
                             || Lumberjack.getMode() == 1 && (isLeaves || newBlockState.getMaterial() == Material.WOOD))
-                        nextMap.put(name, newPoint);
+                        nextMap.put(uuid, newPoint); // Add the block for next tick
                 }
             }
         }

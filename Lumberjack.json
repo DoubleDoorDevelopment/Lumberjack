@@ -1,0 +1,11 @@
+{
+    "1.9.4": {
+        "1.2.0": "Catch exceptions with repairMaterials. This should prevent the mod from crashing, but it won't fix the core issue. #8",
+        "1.3.0": "I am a derp"
+    },
+    "homepage": "http://doubledoordev.net/",
+    "promos": {
+        "1.9.4-latest": "1.3.0",
+        "1.9.4-recomended": "1.3.0"
+    }
+}
