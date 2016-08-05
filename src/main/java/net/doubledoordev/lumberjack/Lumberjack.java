@@ -51,7 +51,6 @@ import org.apache.logging.log4j.Logger;
 import java.util.HashSet;
 import java.util.regex.Pattern;
 
-import static net.doubledoordev.d3core.util.CoreConstants.MODID;
 import static net.doubledoordev.lumberjack.util.Constants.*;
 
 /**
