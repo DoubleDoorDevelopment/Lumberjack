@@ -150,6 +150,11 @@ public class ItemLumberAxe extends ItemAxe
         ItemStack repairStack = getRepairStack(toolMaterial);
         if (repairStack != null && repairStack.getItem() != null)
         {
+            if (repairStack.getMetadata() != 0)
+            {
+                Lumberjack.getLogger().info("LumberAxe {}({}) has a metadata based repair material. It might not be possible to repair in anvils. Blame vanilla.", materialName, toolMaterial);
+            }
+
             int[] ids = OreDictionary.getOreIDs(repairStack);
             if (ids.length == 0)
             {

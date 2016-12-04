@@ -8,7 +8,7 @@ item.lumberaxeAluminium.name=Aluminium Lumberaxe
 item.lumberaxeAquarium.name=Aquarium Lumberaxe
 item.lumberaxeBrass.name=Brass Lumberaxe
 item.lumberaxeBronze.name=Bronze Lumberaxe
-item.lumberaxeColdIron.name=ColdIron Lumberaxe
+item.lumberaxeColdiron.name=Coldiron Lumberaxe
 item.lumberaxeCopper.name=Copper Lumberaxe
 item.lumberaxeCrystalblack.name=Crystalblack Lumberaxe
 item.lumberaxeCrystalblue.name=Crystalblue Lumberaxe
@@ -55,4 +55,13 @@ item.lumberaxeVampiric.name=Vampiric Lumberaxe
 item.lumberaxeVile.name=Vile Lumberaxe
 item.lumberaxeWither.name=Wither Lumberaxe
 item.lumberaxeWood.name=Wood Lumberaxe
+
+
+# Crystal overriders
+item.lumberaxeCrystalblack.name=Void Crystal  Lumberaxe
+item.lumberaxeCrystalblue.name=Palis Crystal  Lumberaxe
+item.lumberaxeCrystalgreen.name=Emeradic Crystal  Lumberaxe
+item.lumberaxeCrystallightblue.name=Diamatine Crystal  Lumberaxe
+item.lumberaxeCrystalred.name=Restonia Crystal  Lumberaxe
+item.lumberaxeCrystalwhite.name=Enori Crystal Lumberaxe
 

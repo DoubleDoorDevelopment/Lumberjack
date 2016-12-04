@@ -31,6 +31,7 @@
 
 package net.doubledoordev.lumberjack;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -91,6 +92,8 @@ public class Lumberjack
     @Mod.EventHandler
     public void init(FMLInitializationEvent event)
     {
+        HashSet<String> duplicates = new HashSet<>();
+
         HashSet<Item.ToolMaterial> unusedMaterials = Sets.newHashSet(Item.ToolMaterial.values());
         // First (since it's the way we can get more accurate damage/speed values) we find all axes
         for (Item i : ImmutableList.copyOf(Item.REGISTRY))
@@ -106,13 +109,13 @@ public class Lumberjack
                     continue;
                 }
 
+                if (isBlacklisted(m.name())) continue;
+
                 if (!unusedMaterials.remove(m) || ItemLumberAxe.usedMaterial(m))
                 {
-                    logger.debug("Material {} ({}) already in use.", m, ItemLumberAxe.normalizeName(m));
+                    duplicates.add(m.toString() + '(' + ItemLumberAxe.normalizeName(m) + ')');
                     continue;
                 }
-
-                if (isBlacklisted(m.name())) continue;
 
                 new ItemLumberAxe(m, axe);
             }
@@ -137,7 +140,7 @@ public class Lumberjack
 
                     if (ItemLumberAxe.usedMaterial(m))
                     {
-                        logger.debug("Material {} ({}) already in use.", m, ItemLumberAxe.normalizeName(m));
+                        duplicates.add(m.toString() + '(' + ItemLumberAxe.normalizeName(m) + ')');
                         continue;
                     }
 
@@ -150,6 +153,11 @@ public class Lumberjack
                     logger.warn("New Lumberaxe error. ToolMaterial '" + m + "' will not exist.", e);
                 }
             }
+        }
+
+        if (!duplicates.isEmpty())
+        {
+            logger.debug("Duplicate Materials: {}", Joiner.on(", ").join(duplicates));
         }
 
         if (event.getSide().isClient()) ClientHelper.init();

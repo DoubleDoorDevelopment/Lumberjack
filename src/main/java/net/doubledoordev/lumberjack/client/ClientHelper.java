@@ -33,17 +33,17 @@ package net.doubledoordev.lumberjack.client;
 
 import net.doubledoordev.lumberjack.items.ItemLumberAxe;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderItem;
+import net.minecraft.client.renderer.ItemModelMesher;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 
 public class ClientHelper
 {
     public static void init()
     {
-        final RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
+        final ItemModelMesher mesher = Minecraft.getMinecraft().getRenderItem().getItemModelMesher();
         for (ItemLumberAxe axe: ItemLumberAxe.getLumberAxes())
         {
-            renderItem.getItemModelMesher().register(axe, 0, new ModelResourceLocation(axe.getRegistryName(), "inventory"));
+            mesher.register(axe, 0, new ModelResourceLocation(axe.getRegistryName(), "inventory"));
         }
     }
 }
