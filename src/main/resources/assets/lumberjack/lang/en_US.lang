@@ -4,6 +4,7 @@ d3.lumberjack.config.lumberjack.tooltip=Settings for Lumberjack
 item.lumberaxeAdamantine.name=Adamantine Lumberaxe
 item.lumberaxeAdmin.name=Admin Lumberaxe
 item.lumberaxeAether.name=Aether Lumberaxe
+item.lumberaxeArkenium.name=Arkenium Lumberaxe
 item.lumberaxeAluminium.name=Aluminium Lumberaxe
 item.lumberaxeAquarium.name=Aquarium Lumberaxe
 item.lumberaxeBrass.name=Brass Lumberaxe
@@ -55,4 +56,3 @@ item.lumberaxeVampiric.name=Vampiric Lumberaxe
 item.lumberaxeVile.name=Vile Lumberaxe
 item.lumberaxeWither.name=Wither Lumberaxe
 item.lumberaxeWood.name=Wood Lumberaxe
-
