@@ -105,7 +105,7 @@ public class EventHandler
 
         // Only interact if  the item matches
         ItemStack itemStack = player.getHeldItemMainhand();
-        if (itemStack == null || !(itemStack.getItem() instanceof ItemLumberAxe)) return;
+        if (itemStack == ItemStack.EMPTY || !(itemStack.getItem() instanceof ItemLumberAxe)) return;
 
         // We are chopping the current block, so save that info
         pointMap.put(uuid, event.getPos());
