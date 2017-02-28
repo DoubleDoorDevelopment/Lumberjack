@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class Constants
 {
-    public static final String MODID = "Lumberjack";
+    public static final String MODID = "lumberjack";
     public static final String UPDATE_URL = CoreConstants.BASE_URL + MODID + ".json";
 
     /**

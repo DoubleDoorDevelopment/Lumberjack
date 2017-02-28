@@ -148,7 +148,7 @@ public class ItemLumberAxe extends ItemAxe
         toolMaterials.add(materialName);
 
         ItemStack repairStack = getRepairStack(toolMaterial);
-        if (repairStack != null && repairStack.getItem() != null)
+        if (repairStack != ItemStack.EMPTY)
         {
             int[] ids = OreDictionary.getOreIDs(repairStack);
             if (ids.length == 0)
@@ -186,7 +186,7 @@ public class ItemLumberAxe extends ItemAxe
     @Override
     public boolean onBlockDestroyed(@Nullable ItemStack itemStack, @Nullable World world, IBlockState state, @Nullable BlockPos blockPos, @Nullable EntityLivingBase entityLivingBase)
     {
-        return itemStack != null && world != null && blockPos != null && entityLivingBase != null &&
+        return itemStack != ItemStack.EMPTY && world != null && blockPos != null && entityLivingBase != null &&
                 (Material.LEAVES.equals(state.getMaterial()) || super.onBlockDestroyed(itemStack, world, state, blockPos, entityLivingBase));
     }
 }

@@ -38,9 +38,9 @@ archivesBaseName = 'Lumberjack'
 def githuborg = 'DoubleDoorDevelopment'
 def description = 'Boom. Tree gone!'
 minecraft {
-    version = "1.9.4-12.17.0.1976"
+    version = "1.11.2-13.20.0.2228"
     runDir = "jars"
-    mappings = "stable_26"
+    mappings = "snapshot_20161220"
 }
 
 repositories {
