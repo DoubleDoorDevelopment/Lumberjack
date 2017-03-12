@@ -85,6 +85,8 @@ item.lumberaxeWood.name=Wood Lumberaxe
 item.lumberaxeXpiron.name=Xpiron Lumberaxe
 item.lumberaxeZirconium.name=Zirconium Lumberaxe
 item.lumberaxePlatinum.name=Platinum Lumberaxe
+item.lumberaxePlutonium.name=Plutonium Lumberaxe
+
 
 # Crystal overriders
 item.lumberaxeCrystalblack.name=Void Crystal  Lumberaxe
