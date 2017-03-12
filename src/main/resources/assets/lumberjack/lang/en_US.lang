@@ -2,11 +2,12 @@ d3.lumberjack.config.lumberjack=Lumberjack
 d3.lumberjack.config.lumberjack.tooltip=Settings for Lumberjack
 
 item.lumberaxeAdamantine.name=Adamantine Lumberaxe
-item.lumberaxeAdmantium.name=Admantium Lumberaxe
+item.lumberaxeAdamantium.name=Adamantium Lumberaxe
 item.lumberaxeAdmin.name=Admin Lumberaxe
 item.lumberaxeAether.name=Aether Lumberaxe
 item.lumberaxeAluminium.name=Aluminium Lumberaxe
 item.lumberaxeAluminumbrass.name=Aluminumbrass Lumberaxe
+item.lumberaxeAluminum.name=Aluminum Lumberaxe
 item.lumberaxeAquarium.name=Aquarium Lumberaxe
 item.lumberaxeBrass.name=Brass Lumberaxe
 item.lumberaxeBronze.name=Bronze Lumberaxe
@@ -45,7 +46,7 @@ item.lumberaxeKinnoium.name=Kinnoium Lumberaxe
 item.lumberaxeLapis.name=Lapis Lumberaxe
 item.lumberaxeLead.name=Lead Lumberaxe
 item.lumberaxeLenthurium.name=Lenthurium Lumberaxe
-item.lumberaxeLunium.name=Lunium Lumberaxe
+item.lumberaxeLumium.name=Lumium Lumberaxe
 item.lumberaxeMagnesium.name=Magnesium Lumberaxe
 item.lumberaxeManasteel.name=Manasteel Lumberaxe
 item.lumberaxeManganese.name=Manganese Lumberaxe
@@ -81,8 +82,9 @@ item.lumberaxeVampiric.name=Vampiric Lumberaxe
 item.lumberaxeVile.name=Vile Lumberaxe
 item.lumberaxeWither.name=Wither Lumberaxe
 item.lumberaxeWood.name=Wood Lumberaxe
+item.lumberaxeXpiron.name=Xpiron Lumberaxe
 item.lumberaxeZirconium.name=Zirconium Lumberaxe
-
+item.lumberaxePlatinum.name=Platinum Lumberaxe
 
 # Crystal overriders
 item.lumberaxeCrystalblack.name=Void Crystal  Lumberaxe
