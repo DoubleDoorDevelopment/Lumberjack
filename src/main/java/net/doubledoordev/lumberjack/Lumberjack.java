@@ -31,27 +31,36 @@
 
 package net.doubledoordev.lumberjack;
 
+import static net.doubledoordev.lumberjack.util.Constants.MODID;
+import static net.doubledoordev.lumberjack.util.Constants.MOD_GUI_FACTORY;
+import static net.doubledoordev.lumberjack.util.Constants.UPDATE_URL;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import org.apache.logging.log4j.Logger;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+
 import net.doubledoordev.lumberjack.client.ClientHelper;
 import net.doubledoordev.lumberjack.items.ItemLumberAxe;
 import net.doubledoordev.lumberjack.util.EventHandler;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemAxe;
+import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import org.apache.logging.log4j.Logger;
-
-import java.util.HashSet;
-import java.util.regex.Pattern;
-
-import static net.doubledoordev.lumberjack.util.Constants.*;
 
 /**
  * @author Dries007
@@ -62,15 +71,18 @@ public class Lumberjack
     @Mod.Instance(MODID)
     public static Lumberjack instance;
 
-    private Logger logger;
+    private static Logger logger;
     private int totalLimit = 1024;
     private int tickLimit = 32;
     private int mode = 0;
     private boolean leaves = false;
-    private boolean useAllMaterials = false;
+    private static boolean useAllMaterials = false;
     
     private Configuration configuration;
     private String[] banList;
+    
+	public static List<Item> itemList = new ArrayList<>();
+	public static List<IRecipe> recipesList = new ArrayList<>();
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -79,6 +91,8 @@ public class Lumberjack
 
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(EventHandler.I);
+        MinecraftForge.EVENT_BUS.register(new RegistrationHandler());
+        
 
         configuration = new Configuration(event.getSuggestedConfigurationFile());
         updateConfig();
@@ -91,67 +105,6 @@ public class Lumberjack
     @Mod.EventHandler
     public void init(FMLInitializationEvent event)
     {
-        HashSet<Item.ToolMaterial> unusedMaterials = Sets.newHashSet(Item.ToolMaterial.values());
-        // First (since it's the way we can get more accurate damage/speed values) we find all axes
-        for (Item i : ImmutableList.copyOf(Item.REGISTRY))
-        {
-            if (!(i instanceof ItemAxe)) continue;
-            try
-            {
-                ItemAxe axe = ((ItemAxe) i);
-                Item.ToolMaterial m = axe.getToolMaterial();
-                if (m == null || m.name() == null)
-                {
-                    logger.error("Found horribly broken axe {} with material {}. Please report.", i.getRegistryName(), m);
-                    continue;
-                }
-
-                if (!unusedMaterials.remove(m) || ItemLumberAxe.usedMaterial(m))
-                {
-                    logger.debug("Material {} ({}) already in use.", m, ItemLumberAxe.normalizeName(m));
-                    continue;
-                }
-
-                if (isBlacklisted(m.name())) continue;
-
-                new ItemLumberAxe(m, axe);
-            }
-            catch (Exception e)
-            {
-                logger.warn("New Lumberaxe error. Axe trying to imitate: " + i.getRegistryName(), e);
-            }
-        }
-
-        // Now we do all other toolmaterials, if allowed by user settings
-        if (useAllMaterials)
-        {
-            for (Item.ToolMaterial m : unusedMaterials)
-            {
-                try
-                {
-                    if (m == null || m.name() == null)
-                    {
-                        logger.error("Found horribly broken material {}. Please report.", m);
-                        continue;
-                    }
-
-                    if (ItemLumberAxe.usedMaterial(m))
-                    {
-                        logger.debug("Material {} ({}) already in use.", m, ItemLumberAxe.normalizeName(m));
-                        continue;
-                    }
-
-                    if (isBlacklisted(m.name())) continue;
-
-                    new ItemLumberAxe(m);
-                }
-                catch (Exception e)
-                {
-                    logger.warn("New Lumberaxe error. ToolMaterial '" + m + "' will not exist.", e);
-                }
-            }
-        }
-
         if (event.getSide().isClient()) ClientHelper.init();
     }
 
@@ -160,6 +113,91 @@ public class Lumberjack
     {
         if (event.getModID().equals(MODID)) updateConfig();
     }
+    
+	public static void registerItem(Item item, String name) {
+		if (item.getRegistryName() == null) {
+			item.setRegistryName(name);
+		}
+		itemList.add(item);
+	}
+	
+	@Mod.EventBusSubscriber(modid = MODID)
+	public static class RegistrationHandler {
+		@SubscribeEvent(priority = EventPriority.LOWEST)
+		public static void registerItemsEvent(RegistryEvent.Register<Item> event) {
+			HashSet<Item.ToolMaterial> unusedMaterials = Sets.newHashSet(Item.ToolMaterial.values());
+	        // First (since it's the way we can get more accurate damage/speed values) we find all axes
+	        for (Item i : ImmutableList.copyOf(Item.REGISTRY))
+	        {
+	            if (!(i instanceof ItemAxe)) continue;
+	            try
+	            {
+	                ItemAxe axe = ((ItemAxe) i);
+	                Item.ToolMaterial m = axe.toolMaterial;
+	                if (m == null || m.name() == null)
+	                {
+	                    logger.error("Found horribly broken axe {} with material {}. Please report.", i.getRegistryName(), m);
+	                    continue;
+	                }
+
+	                if (!unusedMaterials.remove(m) || ItemLumberAxe.usedMaterial(m))
+	                {
+	                    logger.debug("Material {} ({}) already in use.", m, ItemLumberAxe.normalizeName(m));
+	                    continue;
+	                }
+
+	                if (isBlacklisted(m.name())) continue;
+
+	                new ItemLumberAxe(m, axe);
+	            }
+	            catch (Exception e)
+	            {
+	                logger.warn("New Lumberaxe error. Axe trying to imitate: " + i.getRegistryName(), e);
+	            }
+	        }
+
+	        // Now we do all other toolmaterials, if allowed by user settings
+	        if (useAllMaterials)
+	        {
+	            for (Item.ToolMaterial m : unusedMaterials)
+	            {
+	                try
+	                {
+	                    if (m == null || m.name() == null)
+	                    {
+	                        logger.error("Found horribly broken material {}. Please report.", m);
+	                        continue;
+	                    }
+
+	                    if (ItemLumberAxe.usedMaterial(m))
+	                    {
+	                        logger.debug("Material {} ({}) already in use.", m, ItemLumberAxe.normalizeName(m));
+	                        continue;
+	                    }
+
+	                    if (isBlacklisted(m.name())) continue;
+
+	                    new ItemLumberAxe(m);
+	                }
+	                catch (Exception e)
+	                {
+	                    logger.warn("New Lumberaxe error. ToolMaterial '" + m + "' will not exist.", e);
+	                }
+	            }
+	        }
+
+			for (Item item : itemList) {
+				event.getRegistry().register(item);
+			}
+		}
+
+		@SubscribeEvent(priority = EventPriority.LOWEST)
+		public static void registerRecipesEvent(RegistryEvent.Register<IRecipe> event) {
+			for (IRecipe item : recipesList) {
+				event.getRegistry().register(item);
+			}
+		}
+	}
 
     /**+
      * Does blacklist matching based on rules explained in the coding comment.

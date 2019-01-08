@@ -11,7 +11,7 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
         classpath group: 'com.github.rodionmoiseev.gradle.plugins', name: 'idea-utils', version: '0.2'
     }
 }
@@ -38,9 +38,9 @@ archivesBaseName = 'Lumberjack'
 def githuborg = 'DoubleDoorDevelopment'
 def description = 'Boom. Tree gone!'
 minecraft {
-    version = "1.11.2-13.20.0.2228"
+    version = "1.12.2-14.23.5.2806"
     runDir = "jars"
-    mappings = "snapshot_20161220"
+    mappings = "snapshot_20171003"
 }
 
 repositories {
@@ -110,6 +110,9 @@ jar {
     from "LICENSE.txt"
     exclude("com/**")
     appendix = project.minecraft.version
+	manifest {
+        attributes 'FMLAT': 'lumberjack_at.cfg'
+    }
 }
 artifacts {
     archives deobfJar
