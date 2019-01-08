@@ -91,6 +91,7 @@ processResources {
         version.put(project.version, fullLog)
         updateFile.write JsonOutput.prettyPrint(JsonOutput.toJson(json))
     }
+	rename '(.+_at.cfg)', 'META-INF/$1'
 }
 
 task deobfJar(type: Jar, dependsOn: 'jar') {
