@@ -84,11 +84,6 @@ public class ModConfigGuiFactory implements IModGuiFactory
 
     }
 
-    @Override
-    public Class<? extends GuiScreen> mainConfigGuiClass()
-    {
-        return ModConfigGuiFactory.D3ConfigGuiScreen.class;
-    }
 
     @Override
     public Set<IModGuiFactory.RuntimeOptionCategoryElement> runtimeGuiCategories()
@@ -96,9 +91,13 @@ public class ModConfigGuiFactory implements IModGuiFactory
         return null;
     }
 
-    @Override
-    public IModGuiFactory.RuntimeOptionGuiHandler getHandlerFor(IModGuiFactory.RuntimeOptionCategoryElement element)
-    {
-        return null;
-    }
+	@Override
+	public boolean hasConfigGui() {
+		return true;
+	}
+
+	@Override
+	public GuiScreen createConfigGui(GuiScreen parentScreen) {
+		return new D3ConfigGuiScreen(parentScreen);
+	}
 }

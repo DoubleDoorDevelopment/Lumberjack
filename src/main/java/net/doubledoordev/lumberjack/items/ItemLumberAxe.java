@@ -33,12 +33,15 @@ package net.doubledoordev.lumberjack.items;
 
 import com.google.common.collect.ImmutableList;
 import net.doubledoordev.lumberjack.Lumberjack;
+import net.doubledoordev.lumberjack.util.Constants;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
+import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.GameRegistry;
@@ -139,7 +142,7 @@ public class ItemLumberAxe extends ItemAxe
      */
     private ItemLumberAxe(ToolMaterial toolMaterial, boolean fromAxe)
     {
-        super(toolMaterial, 1F + 4F + (0.5F + 2F) * toolMaterial.getDamageVsEntity(), -0.1F -3.5F + 0.05F * toolMaterial.getEfficiencyOnProperMaterial());
+        super(toolMaterial, 1F + 4F + (0.5F + 2F) * toolMaterial.getAttackDamage(), -0.1F -3.5F + 0.05F * toolMaterial.getEfficiency());
         this.fromAxe = fromAxe;
         materialName = normalizeName(toolMaterial);
 
@@ -153,20 +156,24 @@ public class ItemLumberAxe extends ItemAxe
             int[] ids = OreDictionary.getOreIDs(repairStack);
             if (ids.length == 0)
             {
-                GameRegistry.addRecipe(new ShapedOreRecipe(this, "XX", "SX", "SX", 'S', "stickWood", 'X', repairStack).setMirrored(true));
+            	IRecipe temp = new ShapedOreRecipe(null, this, "XX", "SX", "SX", 'S', "stickWood", 'X', repairStack).setMirrored(true).setRegistryName(new ResourceLocation(Constants.MODID, this.getToolMaterialName()));
+            	if(temp != null)
+            		Lumberjack.recipesList.add(temp);
             }
             else
             {
                 for (int id : ids)
                 {
-                    GameRegistry.addRecipe(new ShapedOreRecipe(this, "XX", "SX", "SX", 'S', "stickWood", 'X', OreDictionary.getOreName(id)).setMirrored(true));
+                	IRecipe temp = new ShapedOreRecipe(null, this, "XX", "SX", "SX", 'S', "stickWood", 'X', OreDictionary.getOreName(id)).setMirrored(true).setRegistryName(new ResourceLocation(Constants.MODID, this.getToolMaterialName()));
+                	if(temp != null)
+                		Lumberjack.recipesList.add(temp);
                 }
             }
         }
         else Lumberjack.getLogger().info("LumberAxe {} without recipe! Ask the mod author of {} for a ToolMaterial repairStack OR use D3Core's materials.json file to set it yourself.", materialName, toolMaterial);
 
         setRegistryName("lumberjack", materialName + "_lumberaxe");
-        GameRegistry.register(this);
+        Lumberjack.registerItem(this, materialName + "_lumberaxe");
 
         lumberAxes.add(this);
     }
