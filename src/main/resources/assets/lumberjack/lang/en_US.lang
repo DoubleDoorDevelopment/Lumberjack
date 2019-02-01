@@ -84,8 +84,25 @@ item.lumberaxeWither.name=Wither Lumberaxe
 item.lumberaxeWood.name=Wood Lumberaxe
 item.lumberaxeXpiron.name=Xpiron Lumberaxe
 item.lumberaxeZirconium.name=Zirconium Lumberaxe
-item.lumberaxePlatinum.name=Platinum Lumberaxe
 item.lumberaxePlutonium.name=Plutonium Lumberaxe
+item.lumberaxeAbyssalnite.name=Abyssalnite Lumberaxe
+item.lumberaxeAntimony.name=Antimony Lumberaxe
+item.lumberaxeBeryllium.name=Beryllium Lumberaxe
+item.lumberaxeBismuth.name=Bismuth Lumberaxe
+item.lumberaxeBone.name=Bone Lumberaxe
+item.lumberaxeBoron.name=Boron Lumberaxe
+item.lumberaxeCoralium.name=Coralium Lumberaxe
+item.lumberaxeDarkstone.name=Darkstone Lumberaxe
+item.lumberaxeDreadium.name=Dreadium Lumberaxe
+item.lumberaxeEthaxium.name=Ethaxium Lumberaxe
+item.lumberaxeGoldenwitherbone.name=Golden Bone Lumberaxe
+item.lumberaxeIronwood.name=Ironwood Lumberaxe
+item.lumberaxeKnightmetal.name=Knightmetal Lumberaxe
+item.lumberaxeNeptunium.name=Neptunium Lumberaxe
+item.lumberaxePewter.name=Pewter Lumberaxe
+item.lumberaxeSteeleaf.name=Steeleaf Lumberaxe
+item.lumberaxeThorium.name=Thorium Lumberaxe
+item.lumberaxeZinc.name=Zinc Lumberaxe
 
 
 # Crystal overriders

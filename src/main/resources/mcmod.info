@@ -1,21 +1,16 @@
-{
-  "modListVersion": 2,
-  "modList": [{
-    "modid": "${modid}",
-    "name": "${modid}",
-    "description": "${description}",
+[
+  {
+    "modid": "lumberjack",
+    "name": "LumberJack",
+    "description": "Boom. Tree gone!",
     "version": "${version}",
     "mcversion": "${mcversion}",
-    "url": "https://github.com/${githuborg}/${modid}",
-    "updateUrl": "",
-    "authorList": [ "Dries007", "DoubleDoor team" ],
+    "url": "https://github.com/DoubleDoorDevelopment/Lumberjack",
+    "authorList": [
+      "Dries007",
+      "Claycorp"
+    ],
     "credits": "",
-    "logoFile": "",
-    "screenshots": [],
-    "parent": "",
-    "requiredMods": [ "Forge", "D3Core" ],
-    "dependencies": [ "D3Core" ],
-    "dependants": [ ],
-    "useDependencyInformation": true
-  }]
-}
+    "logoFile": ""
+  }
+]

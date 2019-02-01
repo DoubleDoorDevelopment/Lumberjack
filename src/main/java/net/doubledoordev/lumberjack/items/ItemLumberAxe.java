@@ -31,9 +31,12 @@
 
 package net.doubledoordev.lumberjack.items;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+import javax.annotation.Nullable;
+
 import com.google.common.collect.ImmutableList;
-import net.doubledoordev.lumberjack.Lumberjack;
-import net.doubledoordev.lumberjack.util.Constants;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -44,14 +47,11 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 
-import javax.annotation.Nullable;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
+import net.doubledoordev.lumberjack.Lumberjack;
+import net.doubledoordev.lumberjack.util.Constants;
 
 /**
  * @author Dries007
@@ -121,7 +121,7 @@ public class ItemLumberAxe extends ItemAxe
     public final String materialName;
     public final boolean fromAxe;
 
-    public ItemLumberAxe(ToolMaterial m, ItemAxe axe) throws IllegalAccessException
+    public ItemLumberAxe(ToolMaterial m, ItemAxe axe)
     {
         this(m, true);
         Lumberjack.getLogger().info("New LumberAxe {} ({}) From axe {}", toolMaterial, materialName, axe.getRegistryName());
@@ -146,7 +146,7 @@ public class ItemLumberAxe extends ItemAxe
         this.fromAxe = fromAxe;
         materialName = normalizeName(toolMaterial);
 
-        setUnlocalizedName("lumberaxe" + Character.toUpperCase(materialName.charAt(0)) + materialName.substring(1));
+        setTranslationKey("lumberaxe" + Character.toUpperCase(materialName.charAt(0)) + materialName.substring(1));
 
         toolMaterials.add(materialName);
 
@@ -170,7 +170,7 @@ public class ItemLumberAxe extends ItemAxe
                 }
             }
         }
-        else Lumberjack.getLogger().info("LumberAxe {} without recipe! Ask the mod author of {} for a ToolMaterial repairStack OR use D3Core's materials.json file to set it yourself.", materialName, toolMaterial);
+        else Lumberjack.getLogger().info("LumberAxe {} without recipe! Ask the mod author of {} for a ToolMaterial repairStack.", materialName, toolMaterial);
 
         setRegistryName("lumberjack", materialName + "_lumberaxe");
         Lumberjack.registerItem(this, materialName + "_lumberaxe");

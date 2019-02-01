@@ -31,8 +31,6 @@
 
 package net.doubledoordev.lumberjack.util;
 
-import net.doubledoordev.d3core.util.CoreConstants;
-
 import java.util.List;
 
 /**
@@ -41,12 +39,8 @@ import java.util.List;
 public class Constants
 {
     public static final String MODID = "lumberjack";
-    public static final String UPDATE_URL = CoreConstants.BASE_URL + MODID + ".json";
-
-    /**
-     * @see net.doubledoordev.lumberjack.client.ModConfigGuiFactory
-     */
-    public static final String MOD_GUI_FACTORY = "net.doubledoordev.lumberjack.client.ModConfigGuiFactory";
+    public static final String MOD_NAME = "LumberJack";
+    public static final String VERSION = "1.4.0";
 
     public static final class TableData
     {
