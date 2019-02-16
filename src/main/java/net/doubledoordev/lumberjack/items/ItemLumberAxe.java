@@ -146,7 +146,7 @@ public class ItemLumberAxe extends ItemAxe
         this.fromAxe = fromAxe;
         materialName = normalizeName(toolMaterial);
 
-        setTranslationKey("lumberaxe" + Character.toUpperCase(materialName.charAt(0)) + materialName.substring(1));
+        setUnlocalizedName("lumberaxe" + Character.toUpperCase(materialName.charAt(0)) + materialName.substring(1));
 
         toolMaterials.add(materialName);
 

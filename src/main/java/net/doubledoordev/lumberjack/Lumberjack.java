@@ -69,11 +69,6 @@ public class Lumberjack
     public static Lumberjack instance;
 
     private static Logger logger;
-    private int totalLimit = ModConfig.totalLimit;
-    private int tickLimit = ModConfig.tickLimit;
-    private int mode = ModConfig.mode;
-    private boolean leaves = ModConfig.leaves;
-    private static boolean useAllMaterials = ModConfig.useAllMaterials;
 
     private String[] banList = ModConfig.banList;
     
@@ -144,7 +139,7 @@ public class Lumberjack
 	        }
 
 	        // Now we do all other toolmaterials, if allowed by user settings
-	        if (useAllMaterials)
+	        if (ModConfig.useAllMaterials)
 	        {
 	            for (Item.ToolMaterial m : unusedMaterials)
 	            {
@@ -224,21 +219,21 @@ public class Lumberjack
 
     public static int getTotalLimit()
     {
-        return instance.totalLimit;
+        return ModConfig.totalLimit;
     }
 
     public static int getTickLimit()
     {
-        return instance.tickLimit;
+        return ModConfig.tickLimit;
     }
 
     public static boolean getLeaves()
     {
-        return instance.leaves;
+        return ModConfig.leaves;
     }
 
     public static int getMode()
     {
-        return instance.mode;
+        return ModConfig.mode;
     }
 }

@@ -40,7 +40,7 @@ public class Constants
 {
     public static final String MODID = "lumberjack";
     public static final String MOD_NAME = "LumberJack";
-    public static final String VERSION = "1.4.0";
+    public static final String VERSION = "1.4.1";
 
     public static final class TableData
     {
