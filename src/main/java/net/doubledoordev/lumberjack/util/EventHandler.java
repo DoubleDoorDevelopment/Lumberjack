@@ -31,30 +31,45 @@
 
 package net.doubledoordev.lumberjack.util;
 
+import java.util.UUID;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
-import net.doubledoordev.lumberjack.Lumberjack;
-import net.doubledoordev.lumberjack.items.ItemLumberAxe;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemTier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.LogicalSide;
+import net.minecraftforge.fml.common.Mod;
 
-import java.util.UUID;
+import net.doubledoordev.lumberjack.LumberjackConfig;
+import net.doubledoordev.lumberjack.items.ItemLumberAxe;
 
 /**
  * This event handler relies on the interaction of both events.
  */
+@Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 public class EventHandler
 {
-    public static final EventHandler I = new EventHandler();
+    @SubscribeEvent
+    public static void onRegisterItem(final RegistryEvent.Register<Item> event)
+    {
+        for (ItemTier itemTier : ItemTier.values())
+        {
+            event.getRegistry().register(new ItemLumberAxe(itemTier, new Item.Properties().group(ItemGroup.TOOLS)).setRegistryName(itemTier.name().toLowerCase() + "_lumberaxe"));
+        }
+    }
 
-    private EventHandler()
+    public EventHandler()
     {
     }
 
@@ -70,7 +85,7 @@ public class EventHandler
     public void tickEvent(TickEvent.PlayerTickEvent event)
     {
         if (event.phase != TickEvent.Phase.START) return;
-        if (!event.side.isServer()) return;
+        if (event.side != LogicalSide.SERVER) return;
 
         final UUID uuid = event.player.getUniqueID();
 
@@ -82,13 +97,13 @@ public class EventHandler
         for (BlockPos point : ImmutableSet.copyOf(nextMap.get(uuid)))
         {
             // This indirectly causes breakEvent to be invoked
-            ((EntityPlayerMP) event.player).interactionManager.tryHarvestBlock(point);
+            ((ServerPlayerEntity) event.player).interactionManager.tryHarvestBlock(point);
             // Remove the current point
             nextMap.remove(uuid, point);
-            if (i ++ > Lumberjack.getTickLimit()) break;
+            if (i++ > LumberjackConfig.GENERAL.tickLimit.get()) break;
         }
         // If more blocks then the total limit have been chopped, clear out the next list, thereby breaking the chain
-        if (pointMap.get(uuid).size() > Lumberjack.getTotalLimit()) nextMap.removeAll(uuid);
+        if (pointMap.get(uuid).size() > LumberjackConfig.GENERAL.totalLimit.get()) nextMap.removeAll(uuid);
         // If the next map does not reference this player anymore, we can get rid of the old data
         if (!nextMap.containsKey(uuid) || !nextMap.get(uuid).isEmpty()) pointMap.removeAll(uuid);
     }
@@ -96,12 +111,13 @@ public class EventHandler
     @SubscribeEvent
     public void breakEvent(BlockEvent.BreakEvent event)
     {
-        final EntityPlayer player = event.getPlayer();
+        final PlayerEntity player = event.getPlayer();
         if (player == null) return;
         final UUID uuid = player.getUniqueID();
-        final IBlockState state = event.getState();
+        final BlockState state = event.getState();
         // Only interact if wood or leaves
-        if (!(state.getMaterial() == Material.WOOD || (Lumberjack.getLeaves() && state.getMaterial() == Material.LEAVES))) return;
+        if (!(state.getMaterial() == Material.WOOD || (LumberjackConfig.GENERAL.leaves.get() && state.getMaterial() == Material.LEAVES)))
+            return;
 
         // Only interact if  the item matches
         ItemStack itemStack = player.getHeldItemMainhand();
@@ -121,13 +137,13 @@ public class EventHandler
                     // Avoid doing the same block more then once
                     if (nextMap.containsEntry(uuid, newPoint) || pointMap.containsEntry(uuid, newPoint)) continue;
 
-                    IBlockState newBlockState = event.getWorld().getBlockState(newPoint);
-                    boolean isLeaves = Lumberjack.getLeaves() && newBlockState.getMaterial() == Material.LEAVES;
+                    BlockState newBlockState = event.getWorld().getBlockState(newPoint);
+                    boolean isLeaves = LumberjackConfig.GENERAL.leaves.get() && newBlockState.getMaterial() == Material.LEAVES;
 
                     // Mode 0: leaves or same blocktype
                     // Mode 1: leaves or all wood
-                    if ((Lumberjack.getMode() == 0 && (isLeaves || newBlockState.getBlock() == state.getBlock()))
-                            || Lumberjack.getMode() == 1 && (isLeaves || newBlockState.getMaterial() == Material.WOOD))
+                    if ((LumberjackConfig.GENERAL.mode.get() == 0 && (isLeaves || newBlockState.getBlock() == state.getBlock()))
+                            || LumberjackConfig.GENERAL.mode.get() == 1 && (isLeaves || newBlockState.getMaterial() == Material.WOOD))
                         nextMap.put(uuid, newPoint); // Add the block for next tick
                 }
             }

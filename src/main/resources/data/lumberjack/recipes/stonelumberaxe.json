@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "MM",
+    "MS",
+    "MS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "M": {
+      "tag": "forge:cobblestone"
+    }
+  },
+  "result": {
+    "item": "lumberjack:stone_lumberaxe"
+  }
+}

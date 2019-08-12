@@ -31,209 +31,79 @@
 
 package net.doubledoordev.lumberjack;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 import org.apache.logging.log4j.Logger;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemAxe;
-import net.minecraft.item.crafting.IRecipe;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
-import net.doubledoordev.lumberjack.client.ClientHelper;
-import net.doubledoordev.lumberjack.items.ItemLumberAxe;
-import net.doubledoordev.lumberjack.util.Constants;
 import net.doubledoordev.lumberjack.util.EventHandler;
 
-import static net.doubledoordev.lumberjack.util.Constants.MODID;
 
-/**
- * @author Dries007
- */
-@Mod(modid = Constants.MODID,
-		name = Constants.MOD_NAME,
-		version = Constants.VERSION)
+@Mod("lumberjack")
 public class Lumberjack
 {
-    @Mod.Instance(MODID)
-    public static Lumberjack instance;
+	static final String MOD_ID = "lumberjack";
+	public static Logger LOGGER;
 
-    private static Logger logger;
+	public Lumberjack()
+	{
+		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, LumberjackConfig.spec);
 
-    private String[] banList = ModConfig.banList;
-    
-	public static List<Item> itemList = new ArrayList<>();
-	public static List<IRecipe> recipesList = new ArrayList<>();
+		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
 
-    @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent event)
-    {
-        logger = event.getModLog();
-
-        MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(EventHandler.I);
-        MinecraftForge.EVENT_BUS.register(new RegistrationHandler());
-
-    }
-
-    /**
-     * While it's in general not good to register items in init instead of preInit, I feel here it is appropriate.
-     * This avoids a more complex mod sorting order
-     */
-    @Mod.EventHandler
-    public void init(FMLInitializationEvent event)
-    {
-        if (event.getSide().isClient()) ClientHelper.init();
-    }
-
-	public static void registerItem(Item item, String name) {
-		if (item.getRegistryName() == null) {
-			item.setRegistryName(name);
-		}
-		itemList.add(item);
+		MinecraftForge.EVENT_BUS.register(this);
+		MinecraftForge.EVENT_BUS.register(new EventHandler());
+		MinecraftForge.EVENT_BUS.register(new RegistrationHandler());
 	}
-	
-	@Mod.EventBusSubscriber(modid = MODID)
+
+	private void setup(final FMLCommonSetupEvent event)
+	{
+
+	}
+	//private String[] banList = ModConfig.banList;
+
+	@Mod.EventBusSubscriber(modid = MOD_ID)
 	public static class RegistrationHandler {
-		@SubscribeEvent(priority = EventPriority.LOWEST)
-		public static void registerItemsEvent(RegistryEvent.Register<Item> event) {
-			HashSet<Item.ToolMaterial> unusedMaterials = Sets.newHashSet(Item.ToolMaterial.values());
-	        // First (since it's the way we can get more accurate damage/speed values) we find all axes
-	        for (Item i : ImmutableList.copyOf(Item.REGISTRY))
-	        {
-	            if (!(i instanceof ItemAxe)) continue;
-	            try
-	            {
-	                ItemAxe axe = ((ItemAxe) i);
-	                Item.ToolMaterial m = axe.toolMaterial;
-	                if (m == null || m.name() == null)
-	                {
-	                    logger.error("Found horribly broken axe {} with material {}. Please report.", i.getRegistryName(), m);
-	                    continue;
-	                }
-
-	                if (!unusedMaterials.remove(m) || ItemLumberAxe.usedMaterial(m))
-	                {
-	                    logger.debug("Material {} ({}) already in use.", m, ItemLumberAxe.normalizeName(m));
-	                    continue;
-	                }
-
-	                if (isBlacklisted(m.name())) continue;
-
-	                new ItemLumberAxe(m, axe);
-	            }
-	            catch (Exception e)
-	            {
-	                logger.warn("New Lumberaxe error. Axe trying to imitate: " + i.getRegistryName(), e);
-	            }
-	        }
-
-	        // Now we do all other toolmaterials, if allowed by user settings
-	        if (ModConfig.useAllMaterials)
-	        {
-	            for (Item.ToolMaterial m : unusedMaterials)
-	            {
-	                try
-	                {
-	                    if (m == null || m.name() == null)
-	                    {
-	                        logger.error("Found horribly broken material {}. Please report.", m);
-	                        continue;
-	                    }
-
-	                    if (ItemLumberAxe.usedMaterial(m))
-	                    {
-	                        logger.debug("Material {} ({}) already in use.", m, ItemLumberAxe.normalizeName(m));
-	                        continue;
-	                    }
-
-	                    if (isBlacklisted(m.name())) continue;
-
-	                    new ItemLumberAxe(m);
-	                }
-	                catch (Exception e)
-	                {
-	                    logger.warn("New Lumberaxe error. ToolMaterial '" + m + "' will not exist.", e);
-	                }
-	            }
-	        }
-
-			for (Item item : itemList) {
-				event.getRegistry().register(item);
-			}
-		}
-
-		@SubscribeEvent(priority = EventPriority.LOWEST)
-		public static void registerRecipesEvent(RegistryEvent.Register<IRecipe> event) {
-			for (IRecipe item : recipesList) {
-				event.getRegistry().register(item);
-			}
-		}
+//		@SubscribeEvent(priority = EventPriority.LOWEST)
+//		public static void registerRecipesEvent(RegistryEvent.Register<IRecipe> event) {
+//			for (IRecipe item : recipesList) {
+//				event.getRegistry().register(item);
+//			}
+//		}
 	}
 
-    /**+
-     * Does blacklist matching based on rules explained in the coding comment.
-     * Also prints out the entry that got hit, to aid in debugging faulty configs.
-     */
-    public static boolean isBlacklisted(String name)
-    {
-        // Let's avoid that unpleasantly before it even happens. Cannot print though, since we don't have info.
-        if (Strings.isNullOrEmpty(name)) return true;
+//    /**+
+//     * Does blacklist matching based on rules explained in the coding comment.
+//     * Also prints out the entry that got hit, to aid in debugging faulty configs.
+//     */
+//    public static boolean isBlacklisted(String name)
+//    {
+//        // Let's avoid that unpleasantly before it even happens. Cannot print though, since we don't have info.
+//        if (Strings.isNullOrEmpty(name)) return true;
+//
+//        for (String ban : instance.banList)
+//        {
+//            if (ban.equalsIgnoreCase(name))
+//            {
+//                logger.info("Material {} is blacklisted. It matches {} literally.", name, ban);
+//                return true;
+//            }
+//            if (ban.charAt(0) == '*' && name.endsWith(ban.substring(1)))
+//            {
+//                logger.info("Material {} is blacklisted. It matches {} as a suffix.", name, ban);
+//                return true;
+//            }
+//            if (ban.charAt(ban.length() - 1) == '*' && name.startsWith(ban.substring(0, ban.length() - 2)))
+//            {
+//                logger.info("Material {} is blacklisted. It matches {} as a suffix.", name, ban);
+//                return true;
+//            }
+//        }
+//
+//        return false;
+//    }
 
-        for (String ban : instance.banList)
-        {
-            if (ban.equalsIgnoreCase(name))
-            {
-                logger.info("Material {} is blacklisted. It matches {} literally.", name, ban);
-                return true;
-            }
-            if (ban.charAt(0) == '*' && name.endsWith(ban.substring(1)))
-            {
-                logger.info("Material {} is blacklisted. It matches {} as a suffix.", name, ban);
-                return true;
-            }
-            if (ban.charAt(ban.length() - 1) == '*' && name.startsWith(ban.substring(0, ban.length() - 2)))
-            {
-                logger.info("Material {} is blacklisted. It matches {} as a suffix.", name, ban);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static Logger getLogger()
-    {
-        return logger;
-    }
-
-    public static int getTotalLimit()
-    {
-        return ModConfig.totalLimit;
-    }
-
-    public static int getTickLimit()
-    {
-        return ModConfig.tickLimit;
-    }
-
-    public static boolean getLeaves()
-    {
-        return ModConfig.leaves;
-    }
-
-    public static int getMode()
-    {
-        return ModConfig.mode;
-    }
 }
