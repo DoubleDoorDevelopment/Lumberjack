@@ -23,7 +23,7 @@ public class LumberjackConfig
         public ForgeConfigSpec.IntValue tickLimit;
         public ForgeConfigSpec.IntValue mode;
         public ForgeConfigSpec.DoubleValue damageMultiplier;
-        public ForgeConfigSpec.DoubleValue speedMultiplier;
+        public ForgeConfigSpec.DoubleValue speed;
         public ForgeConfigSpec.DoubleValue durabilityMultiplier;
 
         General(ForgeConfigSpec.Builder builder)
@@ -60,13 +60,13 @@ public class LumberjackConfig
 
             durabilityMultiplier = builder
                     .comment("Multiplier used for durability. Tool material * this value = axe durability")
-                    .translation("lumberjack.config.damageMultiplier")
-                    .defineInRange("damageMultiplier", 1.5, 0, Integer.MAX_VALUE);
+                    .translation("lumberjack.config.durabilityMultiplier")
+                    .defineInRange("durabilityMultiplier", 1.5, 0, Integer.MAX_VALUE);
 
-            speedMultiplier = builder
-                    .comment("Multiplier used for attack speed. Tool material * this value = axe speed")
-                    .translation("lumberjack.config.damageMultiplier")
-                    .defineInRange("damageMultiplier", -5.0, Integer.MIN_VALUE, 0);
+            speed = builder
+                    .comment("Speed used for attack speed. 4 - this value = axe speed")
+                    .translation("lumberjack.config.speed")
+                    .defineInRange("speed", -3.3, -3.9, 0);
 
         }
     }

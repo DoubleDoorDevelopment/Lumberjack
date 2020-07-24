@@ -31,9 +31,15 @@
 
 package net.doubledoordev.lumberjack.items;
 
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.attributes.Attribute;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.ai.attributes.Attributes;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.AxeItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -41,9 +47,15 @@ import net.minecraft.item.ItemTier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import net.doubledoordev.lumberjack.LumberjackConfig;
+
 
 public class ItemLumberAxe extends AxeItem
 {
+    private final Multimap<Attribute, AttributeModifier> attributeMap;
+
+    int baseDurability;
+
     public ItemLumberAxe(ItemTier itemTier, Item.Properties builder)
     {
         super(itemTier,
@@ -52,6 +64,11 @@ public class ItemLumberAxe extends AxeItem
                 builder.addToolType(net.minecraftforge.common.ToolType.AXE,
                         itemTier.getHarvestLevel())
         );
+        baseDurability = itemTier.getMaxUses();
+        ImmutableMultimap.Builder<Attribute, AttributeModifier> attibuteBuilder = ImmutableMultimap.builder();
+        attibuteBuilder.put(Attributes.field_233823_f_, new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Tool modifier", LumberjackConfig.GENERAL.damageMultiplier.get() * itemTier.getAttackDamage(), AttributeModifier.Operation.ADDITION));
+        attibuteBuilder.put(Attributes.field_233825_h_, new AttributeModifier(ATTACK_SPEED_MODIFIER, "Tool modifier", LumberjackConfig.GENERAL.speed.get(), AttributeModifier.Operation.ADDITION));
+        attributeMap = attibuteBuilder.build();
 
         //builder.maxDamage(Math.max((int) (itemTier.getMaxUses() * LumberjackConfig.GENERAL.durabilityMultiplier.get()), 1));
 
@@ -79,19 +96,20 @@ public class ItemLumberAxe extends AxeItem
 
     }
 
-//    public Multimap<String, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot) {
-//        Multimap<String, AttributeModifier> multimap = super.getAttributeModifiers(equipmentSlot);
-//        if (equipmentSlot == EquipmentSlotType.MAINHAND) {
-//            multimap.put(SharedMonsterAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Tool modifier", LumberjackConfig.GENERAL.damageMultiplier.get(), AttributeModifier.Operation.MULTIPLY_BASE));
-//            multimap.put(SharedMonsterAttributes.ATTACK_SPEED.getName(), new AttributeModifier(ATTACK_SPEED_MODIFIER, "Tool modifier", LumberjackConfig.GENERAL.speedMultiplier.get(), AttributeModifier.Operation.MULTIPLY_BASE));
-//        }
-//
-//        return multimap;
-//    }
+    @Override
+    public int getMaxDamage(ItemStack stack)
+    {
+        return (int) (baseDurability * LumberjackConfig.GENERAL.durabilityMultiplier.get());
+    }
 
     @Override
     public boolean onBlockDestroyed(ItemStack stack, World worldIn, BlockState state, BlockPos pos, LivingEntity entityLiving)
     {
-        return stack != ItemStack.EMPTY && worldIn != null && (Material.LEAVES.equals(state.getMaterial()) || super.onBlockDestroyed(stack, worldIn, state, pos, entityLiving));
+        return stack != ItemStack.EMPTY && (Material.LEAVES.equals(state.getMaterial()) || super.onBlockDestroyed(stack, worldIn, state, pos, entityLiving));
+    }
+
+    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot)
+    {
+        return equipmentSlot == EquipmentSlotType.MAINHAND ? attributeMap : super.getAttributeModifiers(equipmentSlot);
     }
 }
