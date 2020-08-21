@@ -7,6 +7,7 @@
 modLoader="javafml" #mandatory
 # A version range to match for said mod loader - for regular FML @Mod it will be the forge version
 loaderVersion="[28,)" #mandatory
+license = "This is the most stupid required option ever because of the most stupid event ever. If you actually look at this stupid thing @ me in my discord so I can give you a Gold Star https://discord.gg/k2YvcYd"
 # A URL to refer people to when problems occur with this mod
 issueTrackerURL="https://github.com/DoubleDoorDevelopment/Lumberjack/issues" #optional
 # A URL for the "homepage" for this mod, displayed in the mod UI

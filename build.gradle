@@ -12,7 +12,7 @@ apply plugin: 'net.minecraftforge.gradle'
 //Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 
-version = '2.1.2'
+version = '2.1.3'
 group = 'net.doubledoordev.lumberjack' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'lumberjack'
 
@@ -55,7 +55,7 @@ dependencies {
     // Specify the version of Minecraft to use, If this is any group other then 'net.minecraft' it is assumed
     // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
-    minecraft 'net.minecraftforge:forge:1.16.1-32.0.14'
+    minecraft 'net.minecraftforge:forge:1.16.2-33.0.7'
 
     // you may put jars on which you depend on in ./libs
     // or you may define them like so..
