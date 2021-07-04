@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "lumberjack:netherite_lumberaxe",
+    "lumberjack:diamond_lumberaxe",
+    "lumberjack:gold_lumberaxe",
+    "lumberjack:iron_lumberaxe",
+    "lumberjack:stone_lumberaxe",
+    "lumberjack:wood_lumberaxe"
+  ]
+}

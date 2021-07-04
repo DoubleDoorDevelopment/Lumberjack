@@ -18,6 +18,7 @@ public class LumberjackConfig
     public static class General
     {
         public ForgeConfigSpec.BooleanValue leaves;
+        public ForgeConfigSpec.BooleanValue useMaterials;
 
         public ForgeConfigSpec.IntValue totalLimit;
         public ForgeConfigSpec.IntValue tickLimit;
@@ -52,6 +53,11 @@ public class LumberjackConfig
                     .comment("Harvest leaves too.")
                     .translation("lumberjack.config.leaves")
                     .define("leaves", false);
+
+            useMaterials = builder
+                    .comment("Allow axes to chain break any wooden material along with the blocks in the `destroy_connected` tag. False = only blocks in the tag can be broken.")
+                    .translation("lumberjack.config.useMaterials")
+                    .define("useMaterials", true);
 
             damageMultiplier = builder
                     .comment("Multiplier used for attack damage. Tool material * this value = axe damage")

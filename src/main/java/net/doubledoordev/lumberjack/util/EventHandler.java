@@ -35,6 +35,7 @@ import java.util.UUID;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.PlayerEntity;
@@ -43,6 +44,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTier;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.ITag;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.TickEvent;
@@ -51,6 +55,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 
+import net.doubledoordev.lumberjack.Lumberjack;
 import net.doubledoordev.lumberjack.LumberjackConfig;
 import net.doubledoordev.lumberjack.items.ItemLumberAxe;
 
@@ -65,7 +70,7 @@ public class EventHandler
     {
         for (ItemTier itemTier : ItemTier.values())
         {
-            event.getRegistry().register(new ItemLumberAxe(itemTier, new Item.Properties().group(ItemGroup.TOOLS)).setRegistryName(itemTier.name().toLowerCase() + "_lumberaxe"));
+            event.getRegistry().register(new ItemLumberAxe(itemTier, new Item.Properties().tab(ItemGroup.TAB_TOOLS)).setRegistryName(itemTier.name().toLowerCase() + "_lumberaxe"));
         }
     }
 
@@ -74,9 +79,9 @@ public class EventHandler
     }
 
     // Keeps track of the chopped blocks across multiple ticks, until there is no more left. Then gets cleared.
-    private HashMultimap<UUID, BlockPos> pointMap = HashMultimap.create();
+    private final HashMultimap<UUID, BlockPos> pointMap = HashMultimap.create();
     // Keeps track of what blocks to chop next tick.
-    private HashMultimap<UUID, BlockPos> nextMap = HashMultimap.create();
+    private final HashMultimap<UUID, BlockPos> nextMap = HashMultimap.create();
 
     /*
      * To avoid the server lagging to death for large tries.
@@ -87,7 +92,7 @@ public class EventHandler
         if (event.phase != TickEvent.Phase.START) return;
         if (event.side != LogicalSide.SERVER) return;
 
-        final UUID uuid = event.player.getUniqueID();
+        final UUID uuid = event.player.getUUID();
 
         // If there are no blocks to chop, return
         if (!nextMap.containsKey(uuid) || nextMap.get(uuid).isEmpty()) return;
@@ -97,7 +102,7 @@ public class EventHandler
         for (BlockPos point : ImmutableSet.copyOf(nextMap.get(uuid)))
         {
             // This indirectly causes breakEvent to be invoked
-            ((ServerPlayerEntity) event.player).interactionManager.tryHarvestBlock(point);
+            ((ServerPlayerEntity) event.player).gameMode.destroyBlock(point);
             // Remove the current point
             nextMap.remove(uuid, point);
             if (i++ > LumberjackConfig.GENERAL.tickLimit.get()) break;
@@ -113,15 +118,20 @@ public class EventHandler
     {
         final PlayerEntity player = event.getPlayer();
         if (player == null) return;
-        final UUID uuid = player.getUniqueID();
-        final BlockState state = event.getState();
-        // Only interact if wood or leaves
-        if (!(state.getMaterial() == Material.WOOD || (LumberjackConfig.GENERAL.leaves.get() && state.getMaterial() == Material.LEAVES)))
-            return;
 
         // Only interact if  the item matches
-        ItemStack itemStack = player.getHeldItemMainhand();
+        ItemStack itemStack = player.getMainHandItem();
         if (itemStack == ItemStack.EMPTY || !(itemStack.getItem() instanceof ItemLumberAxe)) return;
+
+        ITag<Block> destroyConnectedTag = BlockTags.getAllTags().getTagOrEmpty(new ResourceLocation(Lumberjack.MOD_ID, "destroy_connected"));
+        ITag<Block> ignoreConnectedTag = BlockTags.getAllTags().getTagOrEmpty(new ResourceLocation(Lumberjack.MOD_ID, "ignore_connected"));
+
+        // Only interact if wood or leaves
+        final UUID uuid = player.getUUID();
+        final BlockState state = event.getState();
+
+        if (!shalCut(state, destroyConnectedTag, ignoreConnectedTag))
+            return;
 
         // We are chopping the current block, so save that info
         pointMap.put(uuid, event.getPos());
@@ -133,7 +143,7 @@ public class EventHandler
             {
                 for (int offsetY = -1; offsetY <= 1; offsetY++)
                 {
-                    BlockPos newPoint = event.getPos().add(offsetX, offsetY, offsetZ);
+                    BlockPos newPoint = event.getPos().offset(offsetX, offsetY, offsetZ);
                     // Avoid doing the same block more then once
                     if (nextMap.containsEntry(uuid, newPoint) || pointMap.containsEntry(uuid, newPoint)) continue;
 
@@ -142,11 +152,30 @@ public class EventHandler
 
                     // Mode 0: leaves or same blocktype
                     // Mode 1: leaves or all wood
-                    if ((LumberjackConfig.GENERAL.mode.get() == 0 && (isLeaves || newBlockState.getBlock() == state.getBlock()))
-                            || LumberjackConfig.GENERAL.mode.get() == 1 && (isLeaves || newBlockState.getMaterial() == Material.WOOD))
+                    // (if block isn't ignored and is we in mode 0 and (leaves or matching state)) or (if mode 1 && (leaves or should be cut)) place in map.
+                    if (!ignoreConnectedTag.contains(newBlockState.getBlock()) && LumberjackConfig.GENERAL.mode.get() == 0 && (isLeaves || newBlockState.getBlock() == state.getBlock())
+                            || LumberjackConfig.GENERAL.mode.get() == 1 && (isLeaves || shalCut(newBlockState, destroyConnectedTag, ignoreConnectedTag)))
                         nextMap.put(uuid, newPoint); // Add the block for next tick
                 }
             }
         }
+    }
+
+    private boolean shalCut(BlockState state, ITag<Block> destroyTag, ITag<Block> ignoreTag)
+    {
+        Block block = state.getBlock();
+
+        if (ignoreTag.contains(block))
+            return false;
+
+        Material material = state.getMaterial();
+
+        if (LumberjackConfig.GENERAL.useMaterials.get() && (material == Material.WOOD || material == Material.NETHER_WOOD))
+            return true;
+
+        if (LumberjackConfig.GENERAL.leaves.get() && (material == Material.LEAVES))
+            return true;
+
+        return destroyTag.contains(block);
     }
 }

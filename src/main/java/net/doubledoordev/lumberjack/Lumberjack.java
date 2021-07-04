@@ -45,7 +45,7 @@ import net.doubledoordev.lumberjack.util.EventHandler;
 @Mod("lumberjack")
 public class Lumberjack
 {
-	static final String MOD_ID = "lumberjack";
+	public static final String MOD_ID = "lumberjack";
 	public static Logger LOGGER;
 
 	public Lumberjack()

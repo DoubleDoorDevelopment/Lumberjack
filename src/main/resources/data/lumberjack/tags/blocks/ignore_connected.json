@@ -1,0 +1,11 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:torch",
+    "#signs",
+    {
+      "id": "burningtorch:burningtorch",
+      "required": false
+    }
+  ]
+}

@@ -59,15 +59,15 @@ public class ItemLumberAxe extends AxeItem
     public ItemLumberAxe(ItemTier itemTier, Item.Properties builder)
     {
         super(itemTier,
-                (itemTier.getAttackDamage()),
-                (itemTier.getEfficiency()),
+                (itemTier.getAttackDamageBonus()),
+                (itemTier.getSpeed()),
                 builder.addToolType(net.minecraftforge.common.ToolType.AXE,
-                        itemTier.getHarvestLevel())
+                        itemTier.getLevel())
         );
-        baseDurability = itemTier.getMaxUses();
+        baseDurability = itemTier.getUses();
         ImmutableMultimap.Builder<Attribute, AttributeModifier> attibuteBuilder = ImmutableMultimap.builder();
-        attibuteBuilder.put(Attributes.field_233823_f_, new AttributeModifier(ATTACK_DAMAGE_MODIFIER, "Tool modifier", LumberjackConfig.GENERAL.damageMultiplier.get() * itemTier.getAttackDamage(), AttributeModifier.Operation.ADDITION));
-        attibuteBuilder.put(Attributes.field_233825_h_, new AttributeModifier(ATTACK_SPEED_MODIFIER, "Tool modifier", LumberjackConfig.GENERAL.speed.get(), AttributeModifier.Operation.ADDITION));
+        attibuteBuilder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "Tool modifier", LumberjackConfig.GENERAL.damageMultiplier.get() * itemTier.getAttackDamageBonus(), AttributeModifier.Operation.ADDITION));
+        attibuteBuilder.put(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_UUID, "Tool modifier", LumberjackConfig.GENERAL.speed.get(), AttributeModifier.Operation.ADDITION));
         attributeMap = attibuteBuilder.build();
 
         //builder.maxDamage(Math.max((int) (itemTier.getMaxUses() * LumberjackConfig.GENERAL.durabilityMultiplier.get()), 1));
@@ -103,13 +103,13 @@ public class ItemLumberAxe extends AxeItem
     }
 
     @Override
-    public boolean onBlockDestroyed(ItemStack stack, World worldIn, BlockState state, BlockPos pos, LivingEntity entityLiving)
+    public boolean mineBlock(ItemStack stack, World worldIn, BlockState state, BlockPos pos, LivingEntity entityLiving)
     {
-        return stack != ItemStack.EMPTY && (Material.LEAVES.equals(state.getMaterial()) || super.onBlockDestroyed(stack, worldIn, state, pos, entityLiving));
+        return stack != ItemStack.EMPTY && (Material.LEAVES.equals(state.getMaterial()) || super.mineBlock(stack, worldIn, state, pos, entityLiving));
     }
 
-    public Multimap<Attribute, AttributeModifier> getAttributeModifiers(EquipmentSlotType equipmentSlot)
+    public Multimap<Attribute, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlotType equipmentSlot)
     {
-        return equipmentSlot == EquipmentSlotType.MAINHAND ? attributeMap : super.getAttributeModifiers(equipmentSlot);
+        return equipmentSlot == EquipmentSlotType.MAINHAND ? attributeMap : super.getDefaultAttributeModifiers(equipmentSlot);
     }
 }

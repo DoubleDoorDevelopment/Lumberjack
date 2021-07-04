@@ -1,0 +1,15 @@
+{
+  "replace": false,
+  "values": [
+    "#planks",
+    "#logs",
+    "#wooden_buttons",
+    "#wooden_fences",
+    "#wooden_slabs",
+    "#wooden_stairs",
+    "#wooden_trapdoors",
+    "#forge:chests/wooden",
+    "#forge:fences/wooden",
+    "#forge:fence_gates/wooden"
+  ]
+}
