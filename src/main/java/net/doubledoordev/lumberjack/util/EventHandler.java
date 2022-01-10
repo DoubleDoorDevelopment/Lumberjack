@@ -35,19 +35,19 @@ import java.util.UUID;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemTier;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.ITag;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.tags.Tag;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Tiers;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.world.BlockEvent;
@@ -68,9 +68,9 @@ public class EventHandler
     @SubscribeEvent
     public static void onRegisterItem(final RegistryEvent.Register<Item> event)
     {
-        for (ItemTier itemTier : ItemTier.values())
+        for (Tiers itemTier : Tiers.values())
         {
-            event.getRegistry().register(new ItemLumberAxe(itemTier, new Item.Properties().tab(ItemGroup.TAB_TOOLS)).setRegistryName(itemTier.name().toLowerCase() + "_lumberaxe"));
+            event.getRegistry().register(new ItemLumberAxe(itemTier, new Item.Properties().tab(CreativeModeTab.TAB_TOOLS)).setRegistryName(itemTier.name().toLowerCase() + "_lumberaxe"));
         }
     }
 
@@ -102,7 +102,7 @@ public class EventHandler
         for (BlockPos point : ImmutableSet.copyOf(nextMap.get(uuid)))
         {
             // This indirectly causes breakEvent to be invoked
-            ((ServerPlayerEntity) event.player).gameMode.destroyBlock(point);
+            ((ServerPlayer) event.player).gameMode.destroyBlock(point);
             // Remove the current point
             nextMap.remove(uuid, point);
             if (i++ > LumberjackConfig.GENERAL.tickLimit.get()) break;
@@ -116,15 +116,15 @@ public class EventHandler
     @SubscribeEvent
     public void breakEvent(BlockEvent.BreakEvent event)
     {
-        final PlayerEntity player = event.getPlayer();
+        final Player player = event.getPlayer();
         if (player == null) return;
 
         // Only interact if  the item matches
         ItemStack itemStack = player.getMainHandItem();
         if (itemStack == ItemStack.EMPTY || !(itemStack.getItem() instanceof ItemLumberAxe)) return;
 
-        ITag<Block> destroyConnectedTag = BlockTags.getAllTags().getTagOrEmpty(new ResourceLocation(Lumberjack.MOD_ID, "destroy_connected"));
-        ITag<Block> ignoreConnectedTag = BlockTags.getAllTags().getTagOrEmpty(new ResourceLocation(Lumberjack.MOD_ID, "ignore_connected"));
+        Tag<Block> destroyConnectedTag = BlockTags.getAllTags().getTagOrEmpty(new ResourceLocation(Lumberjack.MOD_ID, "destroy_connected"));
+        Tag<Block> ignoreConnectedTag = BlockTags.getAllTags().getTagOrEmpty(new ResourceLocation(Lumberjack.MOD_ID, "ignore_connected"));
 
         // Only interact if wood or leaves
         final UUID uuid = player.getUUID();
@@ -161,7 +161,7 @@ public class EventHandler
         }
     }
 
-    private boolean shalCut(BlockState state, ITag<Block> destroyTag, ITag<Block> ignoreTag)
+    private boolean shalCut(BlockState state, Tag<Block> destroyTag, Tag<Block> ignoreTag)
     {
         Block block = state.getBlock();
 

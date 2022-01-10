@@ -31,21 +31,24 @@
 
 package net.doubledoordev.lumberjack.items;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.attributes.Attribute;
-import net.minecraft.entity.ai.attributes.AttributeModifier;
-import net.minecraft.entity.ai.attributes.Attributes;
-import net.minecraft.inventory.EquipmentSlotType;
-import net.minecraft.item.AxeItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemTier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.AxeItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Tiers;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Material;
 
 import net.doubledoordev.lumberjack.LumberjackConfig;
 
@@ -56,13 +59,12 @@ public class ItemLumberAxe extends AxeItem
 
     int baseDurability;
 
-    public ItemLumberAxe(ItemTier itemTier, Item.Properties builder)
+    public ItemLumberAxe(Tiers itemTier, Item.Properties builder)
     {
         super(itemTier,
                 (itemTier.getAttackDamageBonus()),
                 (itemTier.getSpeed()),
-                builder.addToolType(net.minecraftforge.common.ToolType.AXE,
-                        itemTier.getLevel())
+                builder
         );
         baseDurability = itemTier.getUses();
         ImmutableMultimap.Builder<Attribute, AttributeModifier> attibuteBuilder = ImmutableMultimap.builder();
@@ -102,14 +104,17 @@ public class ItemLumberAxe extends AxeItem
         return (int) (baseDurability * LumberjackConfig.GENERAL.durabilityMultiplier.get());
     }
 
+    @ParametersAreNonnullByDefault
     @Override
-    public boolean mineBlock(ItemStack stack, World worldIn, BlockState state, BlockPos pos, LivingEntity entityLiving)
+    public boolean mineBlock(ItemStack stack, Level level, BlockState state, BlockPos pos, LivingEntity entityLiving)
     {
-        return stack != ItemStack.EMPTY && (Material.LEAVES.equals(state.getMaterial()) || super.mineBlock(stack, worldIn, state, pos, entityLiving));
+        return stack != ItemStack.EMPTY && (Material.LEAVES.equals(state.getMaterial()) || super.mineBlock(stack, level, state, pos, entityLiving));
     }
 
-    public Multimap<Attribute, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlotType equipmentSlot)
+    @Nonnull
+    @ParametersAreNonnullByDefault
+    public Multimap<Attribute, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlot equipmentSlot)
     {
-        return equipmentSlot == EquipmentSlotType.MAINHAND ? attributeMap : super.getDefaultAttributeModifiers(equipmentSlot);
+        return equipmentSlot == EquipmentSlot.MAINHAND ? attributeMap : super.getDefaultAttributeModifiers(equipmentSlot);
     }
 }
