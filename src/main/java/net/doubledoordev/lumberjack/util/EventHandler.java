@@ -36,10 +36,8 @@ import java.util.UUID;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.Tag;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
@@ -55,7 +53,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 
-import net.doubledoordev.lumberjack.Lumberjack;
 import net.doubledoordev.lumberjack.LumberjackConfig;
 import net.doubledoordev.lumberjack.items.ItemLumberAxe;
 
@@ -123,8 +120,8 @@ public class EventHandler
         ItemStack itemStack = player.getMainHandItem();
         if (itemStack == ItemStack.EMPTY || !(itemStack.getItem() instanceof ItemLumberAxe)) return;
 
-        Tag<Block> destroyConnectedTag = BlockTags.getAllTags().getTagOrEmpty(new ResourceLocation(Lumberjack.MOD_ID, "destroy_connected"));
-        Tag<Block> ignoreConnectedTag = BlockTags.getAllTags().getTagOrEmpty(new ResourceLocation(Lumberjack.MOD_ID, "ignore_connected"));
+        TagKey<Block> destroyConnectedTag = TagKeys.DESTROY_CONNECTED;
+        TagKey<Block> ignoreConnectedTag = TagKeys.IGNORE_CONNECTED;
 
         // Only interact if wood or leaves
         final UUID uuid = player.getUUID();
@@ -153,7 +150,7 @@ public class EventHandler
                     // Mode 0: leaves or same blocktype
                     // Mode 1: leaves or all wood
                     // (if block isn't ignored and is we in mode 0 and (leaves or matching state)) or (if mode 1 && (leaves or should be cut)) place in map.
-                    if (!ignoreConnectedTag.contains(newBlockState.getBlock()) && LumberjackConfig.GENERAL.mode.get() == 0 && (isLeaves || newBlockState.getBlock() == state.getBlock())
+                    if (!newBlockState.is(ignoreConnectedTag) && LumberjackConfig.GENERAL.mode.get() == 0 && (isLeaves || newBlockState.getBlock() == state.getBlock())
                             || LumberjackConfig.GENERAL.mode.get() == 1 && (isLeaves || shalCut(newBlockState, destroyConnectedTag, ignoreConnectedTag)))
                         nextMap.put(uuid, newPoint); // Add the block for next tick
                 }
@@ -161,11 +158,9 @@ public class EventHandler
         }
     }
 
-    private boolean shalCut(BlockState state, Tag<Block> destroyTag, Tag<Block> ignoreTag)
+    private boolean shalCut(BlockState state, TagKey<Block> destroyTag, TagKey<Block> ignoreTag)
     {
-        Block block = state.getBlock();
-
-        if (ignoreTag.contains(block))
+        if (state.is(ignoreTag))
             return false;
 
         Material material = state.getMaterial();
@@ -176,6 +171,6 @@ public class EventHandler
         if (LumberjackConfig.GENERAL.leaves.get() && (material == Material.LEAVES))
             return true;
 
-        return destroyTag.contains(block);
+        return state.is(destroyTag);
     }
 }
