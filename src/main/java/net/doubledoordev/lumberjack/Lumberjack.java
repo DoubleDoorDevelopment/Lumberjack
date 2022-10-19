@@ -33,6 +33,7 @@ package net.doubledoordev.lumberjack;
 
 import org.apache.logging.log4j.Logger;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -50,13 +51,16 @@ public class Lumberjack
 
 	public Lumberjack()
 	{
+		final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+
 		ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, LumberjackConfig.spec);
 
 		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
 
 		MinecraftForge.EVENT_BUS.register(this);
-		MinecraftForge.EVENT_BUS.register(new EventHandler());
 		MinecraftForge.EVENT_BUS.register(new RegistrationHandler());
+		EventHandler.ITEMS_DEFERRED.register(modEventBus);
+		MinecraftForge.EVENT_BUS.register(new EventHandler());
 	}
 
 	private void setup(final FMLCommonSetupEvent event)

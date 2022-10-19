@@ -72,7 +72,7 @@ public class LumberjackConfig
             speed = builder
                     .comment("Speed used for attack speed. 4 - this value = axe speed")
                     .translation("lumberjack.config.speed")
-                    .defineInRange("speed", -3.3, -3.9, 0);
+                    .defineInRange("speed", -3.4, -3.99999999999999999, 0);
 
         }
     }

@@ -31,6 +31,7 @@
 
 package net.doubledoordev.lumberjack.util;
 
+import java.util.Locale;
 import java.util.UUID;
 
 import com.google.common.collect.HashMultimap;
@@ -46,13 +47,15 @@ import net.minecraft.world.item.Tiers;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Material;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 
+import net.doubledoordev.lumberjack.Lumberjack;
 import net.doubledoordev.lumberjack.LumberjackConfig;
 import net.doubledoordev.lumberjack.items.ItemLumberAxe;
 
@@ -62,17 +65,15 @@ import net.doubledoordev.lumberjack.items.ItemLumberAxe;
 @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 public class EventHandler
 {
-    @SubscribeEvent
-    public static void onRegisterItem(final RegistryEvent.Register<Item> event)
-    {
-        for (Tiers itemTier : Tiers.values())
-        {
-            event.getRegistry().register(new ItemLumberAxe(itemTier, new Item.Properties().tab(CreativeModeTab.TAB_TOOLS)).setRegistryName(itemTier.name().toLowerCase() + "_lumberaxe"));
-        }
-    }
+    public static final DeferredRegister<Item> ITEMS_DEFERRED = DeferredRegister.create(ForgeRegistries.ITEMS, Lumberjack.MOD_ID);
+
 
     public EventHandler()
     {
+        for (Tiers itemTier : Tiers.values())
+        {
+            ITEMS_DEFERRED.register(itemTier.name().toLowerCase(Locale.ROOT) + "_lumberaxe", () -> new ItemLumberAxe(itemTier, new Item.Properties().tab(CreativeModeTab.TAB_TOOLS)));
+        }
     }
 
     // Keeps track of the chopped blocks across multiple ticks, until there is no more left. Then gets cleared.
@@ -144,7 +145,7 @@ public class EventHandler
                     // Avoid doing the same block more then once
                     if (nextMap.containsEntry(uuid, newPoint) || pointMap.containsEntry(uuid, newPoint)) continue;
 
-                    BlockState newBlockState = event.getWorld().getBlockState(newPoint);
+                    BlockState newBlockState = event.getLevel().getBlockState(newPoint);
                     boolean isLeaves = LumberjackConfig.GENERAL.leaves.get() && newBlockState.getMaterial() == Material.LEAVES;
 
                     // Mode 0: leaves or same blocktype

@@ -55,9 +55,7 @@ import net.doubledoordev.lumberjack.LumberjackConfig;
 
 public class ItemLumberAxe extends AxeItem
 {
-    private final Multimap<Attribute, AttributeModifier> attributeMap;
-
-    int baseDurability;
+    Tiers tier;
 
     public ItemLumberAxe(Tiers itemTier, Item.Properties builder)
     {
@@ -66,11 +64,7 @@ public class ItemLumberAxe extends AxeItem
                 (itemTier.getSpeed()),
                 builder
         );
-        baseDurability = itemTier.getUses();
-        ImmutableMultimap.Builder<Attribute, AttributeModifier> attibuteBuilder = ImmutableMultimap.builder();
-        attibuteBuilder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "Tool modifier", LumberjackConfig.GENERAL.damageMultiplier.get() * itemTier.getAttackDamageBonus(), AttributeModifier.Operation.ADDITION));
-        attibuteBuilder.put(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_UUID, "Tool modifier", LumberjackConfig.GENERAL.speed.get(), AttributeModifier.Operation.ADDITION));
-        attributeMap = attibuteBuilder.build();
+        tier = itemTier;
 
         //builder.maxDamage(Math.max((int) (itemTier.getMaxUses() * LumberjackConfig.GENERAL.durabilityMultiplier.get()), 1));
 
@@ -101,7 +95,7 @@ public class ItemLumberAxe extends AxeItem
     @Override
     public int getMaxDamage(ItemStack stack)
     {
-        return (int) (baseDurability * LumberjackConfig.GENERAL.durabilityMultiplier.get());
+        return (int) (tier.getUses() * LumberjackConfig.GENERAL.durabilityMultiplier.get());
     }
 
     @ParametersAreNonnullByDefault
@@ -115,6 +109,10 @@ public class ItemLumberAxe extends AxeItem
     @ParametersAreNonnullByDefault
     public Multimap<Attribute, AttributeModifier> getDefaultAttributeModifiers(EquipmentSlot equipmentSlot)
     {
-        return equipmentSlot == EquipmentSlot.MAINHAND ? attributeMap : super.getDefaultAttributeModifiers(equipmentSlot);
+        ImmutableMultimap.Builder<Attribute, AttributeModifier> attributeBuilder = ImmutableMultimap.builder();
+        attributeBuilder.put(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_UUID, "Tool modifier", LumberjackConfig.GENERAL.damageMultiplier.get() * tier.getAttackDamageBonus(), AttributeModifier.Operation.ADDITION));
+        attributeBuilder.put(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_UUID, "Tool modifier", LumberjackConfig.GENERAL.speed.get(), AttributeModifier.Operation.ADDITION));
+
+        return equipmentSlot == EquipmentSlot.MAINHAND ? attributeBuilder.build() : super.getDefaultAttributeModifiers(equipmentSlot);
     }
 }
