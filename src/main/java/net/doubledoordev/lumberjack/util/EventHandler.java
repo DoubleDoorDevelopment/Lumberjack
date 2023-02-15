@@ -40,7 +40,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Tiers;
@@ -58,6 +57,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.doubledoordev.lumberjack.Lumberjack;
 import net.doubledoordev.lumberjack.LumberjackConfig;
 import net.doubledoordev.lumberjack.items.ItemLumberAxe;
+import net.minecraftforge.registries.RegistryObject;
 
 /**
  * This event handler relies on the interaction of both events.
@@ -67,12 +67,13 @@ public class EventHandler
 {
     public static final DeferredRegister<Item> ITEMS_DEFERRED = DeferredRegister.create(ForgeRegistries.ITEMS, Lumberjack.MOD_ID);
 
+    public static final RegistryObject<Item>[] modItems=new RegistryObject[Tiers.values().length];
 
     public EventHandler()
     {
-        for (Tiers itemTier : Tiers.values())
-        {
-            ITEMS_DEFERRED.register(itemTier.name().toLowerCase(Locale.ROOT) + "_lumberaxe", () -> new ItemLumberAxe(itemTier, new Item.Properties().tab(CreativeModeTab.TAB_TOOLS)));
+        int idx=0;
+        for (Tiers itemTier : Tiers.values()){
+            modItems[idx++]=ITEMS_DEFERRED.register(itemTier.name().toLowerCase(Locale.ROOT) + "_lumberaxe", () -> new ItemLumberAxe(itemTier, new Item.Properties()));
         }
     }
 

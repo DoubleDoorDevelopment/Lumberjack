@@ -31,6 +31,10 @@
 
 package net.doubledoordev.lumberjack;
 
+import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.Item;
+import net.minecraftforge.event.CreativeModeTabEvent;
+import net.minecraftforge.registries.RegistryObject;
 import org.apache.logging.log4j.Logger;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -57,11 +61,23 @@ public class Lumberjack
 
 		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
 
+
 		MinecraftForge.EVENT_BUS.register(this);
 		MinecraftForge.EVENT_BUS.register(new RegistrationHandler());
 		EventHandler.ITEMS_DEFERRED.register(modEventBus);
 		MinecraftForge.EVENT_BUS.register(new EventHandler());
+
+		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::addCreativeTabContents);
 	}
+
+	private void addCreativeTabContents(CreativeModeTabEvent.BuildContents event) {
+		if (event.getTab() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+			for(RegistryObject<Item> i : EventHandler.modItems) {
+				event.accept(i);
+			}
+		}
+	}
+
 
 	private void setup(final FMLCommonSetupEvent event)
 	{
