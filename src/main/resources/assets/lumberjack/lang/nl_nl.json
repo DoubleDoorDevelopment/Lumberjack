@@ -1,0 +1,16 @@
+{
+  "d3.lumberjack.config.lumberjack": "Lumberjack",
+  "d3.lumberjack.config.lumberjack.tooltip": "Configuratie voor Lumberjack",
+  "item.lumberjack.admin_lumberaxe": "Admin houthakkersbijl",
+  "item.lumberjack.copper_lumberaxe": "Koperen houthakkersbijl",
+  "item.lumberjack.diamond_lumberaxe": "Diamanten houthakkersbijl",
+  "item.lumberjack.emerald_lumberaxe": "Emerald houthakkersbijl",
+  "item.lumberjack.flint_lumberaxe": "Flint houthakkersbijl",
+  "item.lumberjack.gold_lumberaxe": "Gouden houthakkersbijl",
+  "item.lumberjack.iron_lumberaxe": "Ijzeren houthakkersbijl",
+  "item.lumberjack.lapis_lumberaxe": "Lapis houthakkersbijl",
+  "item.lumberjack.quartz_lumberaxe": "Quartz houthakkersbijl",
+  "item.lumberjack.stone_lumberaxe": "Stenen houthakkersbijl",
+  "item.lumberjack.wood_lumberaxe": "Houten houthakkersbijl",
+  "item.lumberjack.netherite_lumberaxe": "Netherite houthakkersbijl"
+}

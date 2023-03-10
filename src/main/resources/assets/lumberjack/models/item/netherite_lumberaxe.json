@@ -1,6 +1,6 @@
 {
   "parent": "item/handheld",
   "textures": {
-    "layer0": "lumberjack:items/netherite_lumberaxe"
+    "layer0": "lumberjack:item/netherite_lumberaxe"
   }
 }
